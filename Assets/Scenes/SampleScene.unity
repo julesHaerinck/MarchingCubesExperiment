@@ -130,8 +130,8 @@ GameObject:
   m_Component:
   - component: {fileID: 491653746}
   - component: {fileID: 491653745}
-  - component: {fileID: 491653748}
   - component: {fileID: 491653747}
+  - component: {fileID: 491653748}
   m_Layer: 0
   m_Name: TerrainGeneration
   m_TagString: Untagged
@@ -151,11 +151,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2f6222b4be827a044a4529930bf50bee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  BoundingBox: {x: 5, y: 5, z: 5}
+  BoundingBox: {x: 16, y: 10, z: 16}
   meshFilter: {fileID: 491653748}
-  IsoSurfaceLimit: 0.39
-  Resolution: 1
-  SphereSize: 0.05
+  IsoSurfaceLimit: 0.434
+  Resolution: 0.5
+  SphereSize: 0.2
 --- !u!4 &491653746
 Transform:
   m_ObjectHideFlags: 0

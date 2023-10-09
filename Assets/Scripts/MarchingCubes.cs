@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using TreeEditor;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 
 public struct CubeData
@@ -19,6 +21,7 @@ public class MarchingCubes : MonoBehaviour
 {
     public Vector3 BoundingBox = Vector3.one;
     public MeshFilter meshFilter;
+    [Range(0f, 1f)]
     public float IsoSurfaceLimit = 1f;
     [Range(0.2f, 5f)]
     public float Resolution = 1f;
@@ -57,9 +60,21 @@ public class MarchingCubes : MonoBehaviour
                 for(int k = 0; k <= steps.z + 1; k++)
                 {
                     Vector3 pointPosition = new Vector3(-BoundingBox.x/2 + i* Resolution, -BoundingBox.y/2 + j * Resolution, -BoundingBox.z/2 + k * Resolution);
+                    float noiseSample = -pointPosition.y + Random.Range(0f, 1f);
+                    //float noiseSample = Random.Range(0f,1f);
+                    //float noiseSample = Mathf.PerlinNoise((float)i/steps.x, (float)j/steps.y);
+                    
                     points[i, j, k] = new PointData();
                     points[i, j, k].position = pointPosition;
-                    points[i, j, k].IsoLevel = pointPosition.y;
+                    points[i, j, k].IsoLevel = noiseSample;
+                    if(points[i, j, k].IsoLevel > IsoSurfaceLimit)
+                    {
+                        //GameObject PointView = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                        //PointView.transform.position = pointPosition;
+                        //PointView.transform.localScale = new Vector3(SphereSize, SphereSize, SphereSize);
+                        //PointView.GetComponent<Renderer>().material.SetColor("_Color", new Color(noiseSample, noiseSample, noiseSample));
+                    }
+                    //Debug.Log(points[i, j, k].IsoLevel);
                 }
             }
         }
@@ -83,16 +98,10 @@ public class MarchingCubes : MonoBehaviour
     {
 
 
-        //foreach(CubeData cube in VoxelList)
-        //{
-        //    DrawCube(cube);
-        //}
-
-        //Vector3 steps = BoundingBox / Resolution;
-        //Debug.Log($"{(int)steps.x}");
     }
 
     // Visualize the points present in the boinding box
+    /*
     private void OnDrawGizmos()
     {
         Vector3 steps = BoundingBox / Resolution;
@@ -113,9 +122,11 @@ public class MarchingCubes : MonoBehaviour
             }
         }
     }
+    */
 
     private void DrawCubes()
     {
+
         //Debug.Log(VerticeList.Count);
         NewMesh.vertices = VerticeList.ToArray();
         NewMesh.triangles = TriangleList.ToArray();
@@ -123,6 +134,8 @@ public class MarchingCubes : MonoBehaviour
         //Debug.Log(meshFilter.mesh.vertices.Length);
         //NewMesh.triangles = TriangleList.ToArray();
         //NewMesh.vert
+        VerticeList.Clear();
+        TriangleList.Clear();
     }
 
     private void CalculateCube(CubeData cube, int passes)
@@ -144,7 +157,7 @@ public class MarchingCubes : MonoBehaviour
 
         //Debug.Log($"Cube passed at pass nb : {passes}");
 
-        DebugDrawCube(cube);
+        //DebugDrawCube(cube);
 
         if((marchingCubesLookupTable.edgeTable[cubeIndex] & 1) != 0)
             vertList[0] = InterpolateTwoPoints(cube.cubePoints[0], cube.cubePoints[1]);
@@ -179,9 +192,9 @@ public class MarchingCubes : MonoBehaviour
             VerticeList.Add(vertList[marchingCubesLookupTable.triTable[cubeIndex, i + 1]].position);
             VerticeList.Add(vertList[marchingCubesLookupTable.triTable[cubeIndex, i + 2]].position);
             
-            TriangleList.Add(VerticeList.Count - 1);
-            TriangleList.Add(VerticeList.Count - 2);
             TriangleList.Add(VerticeList.Count - 3);
+            TriangleList.Add(VerticeList.Count - 2);
+            TriangleList.Add(VerticeList.Count - 1);
             ntriang++;
             //Debug.Log(tri.vertices[1].position);
             //Debug.Log(marchingCubesLookupTable.triTable[cubeIndex, i]);
@@ -261,20 +274,20 @@ public class MarchingCubes : MonoBehaviour
 
     private void DebugDrawCube(CubeData cube)
     {
-        Debug.DrawLine(cube.cubePoints[0].position, cube.cubePoints[1].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10000f);
-        Debug.DrawLine(cube.cubePoints[1].position, cube.cubePoints[2].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10000f);
-        Debug.DrawLine(cube.cubePoints[2].position, cube.cubePoints[3].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10000f);
-        Debug.DrawLine(cube.cubePoints[3].position, cube.cubePoints[0].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10000f);
+        Debug.DrawLine(cube.cubePoints[0].position, cube.cubePoints[1].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10f);
+        Debug.DrawLine(cube.cubePoints[1].position, cube.cubePoints[2].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10f);
+        Debug.DrawLine(cube.cubePoints[2].position, cube.cubePoints[3].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10f);
+        Debug.DrawLine(cube.cubePoints[3].position, cube.cubePoints[0].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10f);
 
-        Debug.DrawLine(cube.cubePoints[4].position, cube.cubePoints[5].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10000f);
-        Debug.DrawLine(cube.cubePoints[5].position, cube.cubePoints[6].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10000f);
-        Debug.DrawLine(cube.cubePoints[6].position, cube.cubePoints[7].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10000f);
-        Debug.DrawLine(cube.cubePoints[7].position, cube.cubePoints[4].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10000f);
+        Debug.DrawLine(cube.cubePoints[4].position, cube.cubePoints[5].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10f);
+        Debug.DrawLine(cube.cubePoints[5].position, cube.cubePoints[6].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10f);
+        Debug.DrawLine(cube.cubePoints[6].position, cube.cubePoints[7].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10f);
+        Debug.DrawLine(cube.cubePoints[7].position, cube.cubePoints[4].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10f);
 
-        Debug.DrawLine(cube.cubePoints[0].position, cube.cubePoints[4].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10000f);
-        Debug.DrawLine(cube.cubePoints[1].position, cube.cubePoints[5].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10000f);
-        Debug.DrawLine(cube.cubePoints[2].position, cube.cubePoints[6].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10000f);
-        Debug.DrawLine(cube.cubePoints[3].position, cube.cubePoints[7].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10000f);
+        Debug.DrawLine(cube.cubePoints[0].position, cube.cubePoints[4].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10f);
+        Debug.DrawLine(cube.cubePoints[1].position, cube.cubePoints[5].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10f);
+        Debug.DrawLine(cube.cubePoints[2].position, cube.cubePoints[6].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10f);
+        Debug.DrawLine(cube.cubePoints[3].position, cube.cubePoints[7].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10f);
     }
 }
 
