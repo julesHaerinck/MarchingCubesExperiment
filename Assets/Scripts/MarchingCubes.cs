@@ -14,11 +14,6 @@ public struct PointData
     public float   IsoLevel;
 }
 
-public struct TriangleData
-{
-    public PointData[] vertices;
-}
-
 //[ExecuteInEditMode]
 public class MarchingCubes : MonoBehaviour
 {
@@ -31,8 +26,9 @@ public class MarchingCubes : MonoBehaviour
     //public float GizmosSphereSize = .5f;
     public float SphereSize = .5f;
 
-    private List<CubeData> CubeList = new List<CubeData>();
-    private List<TriangleData> TriangleList = new List<TriangleData>();
+    public List<CubeData> CubeList     = new List<CubeData>();
+    public List<Vector3>  VerticeList  = new List<Vector3>();
+    public List<int>      TriangleList = new List<int>();
 
     private Vector3Int steps;
     private PointData[,,] points;
@@ -70,9 +66,15 @@ public class MarchingCubes : MonoBehaviour
         //Debug.Log(points.Length);
         CreateCubes();
 
+        int passes = 0;
         foreach(CubeData cube in CubeList)
-            CalculateCube(cube);
+        {
+            CalculateCube(cube, passes);
+            passes++;
+        }
+            
         //Debug.Log(CubeList.Count);
+        //DrawCubes();
     }
 
     // Update is called once per frame
@@ -115,13 +117,16 @@ public class MarchingCubes : MonoBehaviour
 
     private void DrawCubes()
     {
-        // TODO 
-        // creat a new mesh with the calculated triangles
+        //Debug.Log(VerticeList.Count);
+        NewMesh.vertices = VerticeList.ToArray();
+        NewMesh.triangles = TriangleList.ToArray();
+        meshFilter.mesh = NewMesh;
+        //Debug.Log(meshFilter.mesh.vertices.Length);
         //NewMesh.triangles = TriangleList.ToArray();
         //NewMesh.vert
     }
 
-    private void CalculateCube(CubeData cube)
+    private void CalculateCube(CubeData cube, int passes)
     {
         PointData[] vertList = new PointData[12];
         uint cubeIndex = 0;
@@ -138,7 +143,9 @@ public class MarchingCubes : MonoBehaviour
         if(marchingCubesLookupTable.edgeTable[cubeIndex] == 0)
             return;
 
-        //Debug.Log(marchingCubesLookupTable.edgeTable[cubeIndex] & 4);
+        Debug.Log($"Cube passed at pass nb : {passes}");
+
+        DebugDrawCube(cube);
 
         if((marchingCubesLookupTable.edgeTable[cubeIndex] & 1) != 0)
             vertList[0] = InterpolateTwoPoints(cube.cubePoints[0], cube.cubePoints[1]);
@@ -169,15 +176,19 @@ public class MarchingCubes : MonoBehaviour
 
         for(int i = 0; marchingCubesLookupTable.triTable[cubeIndex,i] != -1 ;i += 3)
         {
-            TriangleData tri = new TriangleData();
-            tri.vertices = new PointData[3]
-            {
-                vertList[marchingCubesLookupTable.triTable[cubeIndex, i]],
-                vertList[marchingCubesLookupTable.triTable[cubeIndex, i+1]],
-                vertList[marchingCubesLookupTable.triTable[cubeIndex, i+2]],
-            };
+            VerticeList.Add(vertList[marchingCubesLookupTable.triTable[cubeIndex, i]].position);
+            VerticeList.Add(vertList[marchingCubesLookupTable.triTable[cubeIndex, i + 1]].position);
+            VerticeList.Add(vertList[marchingCubesLookupTable.triTable[cubeIndex, i + 2]].position);
+            //Debug.Log(passes);
+            TriangleList.Add(0 + passes);
+            TriangleList.Add(1 + passes + 1);
+            TriangleList.Add(2 + passes + 2);
             ntriang++;
+            //Debug.Log(tri.vertices[1].position);
+            //Debug.Log(marchingCubesLookupTable.triTable[cubeIndex, i]);
         }
+
+
     }
 
     private void CreateCubes()
@@ -248,13 +259,40 @@ public class MarchingCubes : MonoBehaviour
 
         return false;
     }
+
+    private void DebugDrawCube(CubeData cube)
+    {
+        Debug.DrawLine(cube.cubePoints[0].position, cube.cubePoints[1].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10000f);
+        Debug.DrawLine(cube.cubePoints[1].position, cube.cubePoints[2].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10000f);
+        Debug.DrawLine(cube.cubePoints[2].position, cube.cubePoints[3].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10000f);
+        Debug.DrawLine(cube.cubePoints[3].position, cube.cubePoints[0].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10000f);
+
+        Debug.DrawLine(cube.cubePoints[4].position, cube.cubePoints[5].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10000f);
+        Debug.DrawLine(cube.cubePoints[5].position, cube.cubePoints[6].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10000f);
+        Debug.DrawLine(cube.cubePoints[6].position, cube.cubePoints[7].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10000f);
+        Debug.DrawLine(cube.cubePoints[7].position, cube.cubePoints[4].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10000f);
+
+        Debug.DrawLine(cube.cubePoints[0].position, cube.cubePoints[4].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10000f);
+        Debug.DrawLine(cube.cubePoints[1].position, cube.cubePoints[5].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10000f);
+        Debug.DrawLine(cube.cubePoints[2].position, cube.cubePoints[6].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10000f);
+        Debug.DrawLine(cube.cubePoints[3].position, cube.cubePoints[7].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10000f);
+    }
 }
 
 
 
 // Bits of code that might be usefulls later
 // Will delete at some points
+
+
 /*
+ * '
+ *             VerticeList.Add(new Vector3[3]
+            {
+                vertList[marchingCubesLookupTable.triTable[cubeIndex, i]].position,
+                vertList[marchingCubesLookupTable.triTable[cubeIndex, i+1]].position,
+                vertList[marchingCubesLookupTable.triTable[cubeIndex, i+2]].position,
+            });
  *         if (x < right.x)
             return true;
         else if (x > right.x)
