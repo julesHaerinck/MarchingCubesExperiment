@@ -25,10 +25,11 @@ public class MarchingCubes : MonoBehaviour
 
     //public float GizmosSphereSize = .5f;
     public float SphereSize = .5f;
+    //public Texture2D NoiseTextur
 
-    public List<CubeData> CubeList     = new List<CubeData>();
-    public List<Vector3>  VerticeList  = new List<Vector3>();
-    public List<int>      TriangleList = new List<int>();
+    private List<CubeData> CubeList     = new List<CubeData>();
+    private List<Vector3>  VerticeList  = new List<Vector3>();
+    private List<int>      TriangleList = new List<int>();
 
     private Vector3Int steps;
     private PointData[,,] points;
@@ -74,7 +75,7 @@ public class MarchingCubes : MonoBehaviour
         }
             
         //Debug.Log(CubeList.Count);
-        //DrawCubes();
+        DrawCubes();
     }
 
     // Update is called once per frame
@@ -105,8 +106,6 @@ public class MarchingCubes : MonoBehaviour
                 // z
                 for(int k = 0; k <= (int)steps.z + 1; k++)
                 {
-
-
                     Vector3 pointPosition = new Vector3(-BoundingBox.x/2 + i* Resolution, -BoundingBox.y/2 + j * Resolution, -BoundingBox.z/2 + k * Resolution);
                     Gizmos.color = new Color(pointPosition.y, 0, 0, 1);
                     Gizmos.DrawSphere(pointPosition, SphereSize);
@@ -143,7 +142,7 @@ public class MarchingCubes : MonoBehaviour
         if(marchingCubesLookupTable.edgeTable[cubeIndex] == 0)
             return;
 
-        Debug.Log($"Cube passed at pass nb : {passes}");
+        //Debug.Log($"Cube passed at pass nb : {passes}");
 
         DebugDrawCube(cube);
 
@@ -179,10 +178,10 @@ public class MarchingCubes : MonoBehaviour
             VerticeList.Add(vertList[marchingCubesLookupTable.triTable[cubeIndex, i]].position);
             VerticeList.Add(vertList[marchingCubesLookupTable.triTable[cubeIndex, i + 1]].position);
             VerticeList.Add(vertList[marchingCubesLookupTable.triTable[cubeIndex, i + 2]].position);
-            //Debug.Log(passes);
-            TriangleList.Add(0 + passes);
-            TriangleList.Add(1 + passes + 1);
-            TriangleList.Add(2 + passes + 2);
+            
+            TriangleList.Add(VerticeList.Count - 1);
+            TriangleList.Add(VerticeList.Count - 2);
+            TriangleList.Add(VerticeList.Count - 3);
             ntriang++;
             //Debug.Log(tri.vertices[1].position);
             //Debug.Log(marchingCubesLookupTable.triTable[cubeIndex, i]);
