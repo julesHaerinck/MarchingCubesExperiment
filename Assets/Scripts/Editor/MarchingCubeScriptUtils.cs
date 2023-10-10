@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using UnityEditor;
+using MarchingCube;
 
 [CustomEditor(typeof(MarchingCubes))]
 public class MarchingCubeScriptUtils : Editor
