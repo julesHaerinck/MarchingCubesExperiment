@@ -3,12 +3,12 @@ using System.Collections;
 using UnityEditor;
 using MarchingCube;
 
-[CustomEditor(typeof(MarchingCubes))]
+[CustomEditor(typeof(MarchingCubesGeneration))]
 public class MarchingCubeScriptUtils : Editor
 {
     void OnSceneGUI()
     {
-        MarchingCubes myTarget = (MarchingCubes)target;
+        MarchingCubesGeneration myTarget = (MarchingCubesGeneration)target;
 
         Handles.color = Color.green;
         Handles.DrawWireCube(myTarget.transform.position, myTarget.BoundingBox);

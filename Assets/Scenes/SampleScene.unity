@@ -216,7 +216,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 90f04ace199912641b104280a440c12c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  BoundingBox: {x: 1, y: 1, z: 1}
+  BoundingBox: {x: 3, y: 3, z: 3}
   meshFilter: {fileID: 491653748}
   SphereSize: 0.2
   NoiseMultiplier: 1

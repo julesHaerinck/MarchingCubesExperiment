@@ -20,16 +20,16 @@ public struct PointData
 //[ExecuteInEditMode]
 namespace MarchingCube
 {
-    public class MarchingCubes : MonoBehaviour
+    public class MarchingCubesGeneration : MonoBehaviour
     {
         [Header("Awake")]
         public Vector3 BoundingBox = Vector3.one;
-        public MeshFilter meshFilter;
+        public MeshFilter MeshFilter;
         public float SphereSize = .5f;
         public float NoiseMultiplier = 1f;
 
         [Range(0.2f, 5f)]
-        public float Resolution = 1f;
+        public float      Resolution = 1f;
         public GameObject SphereParent;
 
         [Header("Update")]
@@ -43,38 +43,38 @@ namespace MarchingCube
         private List<Cube>  _cubeList     = new List<Cube>();
         private List<int>   _triangleList = new List<int>();
 
-        private Vector3Int steps;
-        private Point[,,] _pointList;
-        private Mesh NewMesh;
+        private Vector3Int _steps;
+        private Point[,,]  _pointList;
+        private Mesh       _newMesh;
 
         // Start is called before the first frame update
         void Awake()
         {
-            NewMesh = new Mesh();
+            _newMesh = new Mesh();
 
-            steps = new Vector3Int(
+            _steps = new Vector3Int(
                 (int)(BoundingBox.x / Resolution),
                 (int)(BoundingBox.y / Resolution),
                 (int)(BoundingBox.z / Resolution)
                 );
-            _pointList = new Point[steps.x + 1, steps.y + 1, steps.z + 1];
-            Debug.Log($"X : {steps.x}, Y : {steps.y}, Z : {steps.z}");
-            for(int y = 0; y <= steps.y; y++)
+
+            _pointList = new Point[_steps.x + 1, _steps.y + 1, _steps.z + 1];
+
+            //Debug.Log($"X : {steps.x}, Y : {steps.y}, Z : {steps.z}");
+            for(int y = 0; y <= _steps.y; y++)
             {
-                for(int z = 0; z <= steps.z; z++)
+                for(int z = 0; z <= _steps.z; z++)
                 {
-                    for(int x = 0; x <= steps.x; x++)
+                    for(int x = 0; x <= _steps.x; x++)
                     {
                         Vector3 pointPosition = new Vector3(
                             -BoundingBox.x/2 + x * Resolution, 
                             -BoundingBox.y/2 + y * Resolution,
                             -BoundingBox.z/2 + z * Resolution
-                            );
-                        // Since in the project Y is up, it is switched with z
-                        
+                            );                        
 
                         float noiseSample = 1;
-                        Debug.Log($"X : {x}, Y : {y}, Z : {z}");
+                        //Debug.Log($"X : {x}, Y : {y}, Z : {z}");
                         Point point = new Point(noiseSample, pointPosition);
                         _pointList[x,y,z] = point;
                         
@@ -178,75 +178,73 @@ namespace MarchingCube
         /// <param name="cube">The cube to calculate</param>
         private void CalculateCube(Cube cube, int passes = -1)
         {
-            //PointData[] vertList = new PointData[12];
-            //uint cubeIndex = 0;
-            //
-            //if(cube.cubePoints[0].IsoLevel < IsoSurfaceLimit)
-            //    cubeIndex |= 1;
-            //if(cube.cubePoints[1].IsoLevel < IsoSurfaceLimit)
-            //    cubeIndex |= 2;
-            //if(cube.cubePoints[2].IsoLevel < IsoSurfaceLimit)
-            //    cubeIndex |= 4;
-            //if(cube.cubePoints[3].IsoLevel < IsoSurfaceLimit)
-            //    cubeIndex |= 8;
-            //if(cube.cubePoints[4].IsoLevel < IsoSurfaceLimit)
-            //    cubeIndex |= 16;
-            //if(cube.cubePoints[5].IsoLevel < IsoSurfaceLimit)
-            //    cubeIndex |= 32;
-            //if(cube.cubePoints[6].IsoLevel < IsoSurfaceLimit)
-            //    cubeIndex |= 64;
-            //if(cube.cubePoints[7].IsoLevel < IsoSurfaceLimit)
-            //    cubeIndex |= 128;
-            //
-            //if(marchingCubesLookupTable.edgeTable[cubeIndex] == 0)
-            //    return;
-            //
-            ////Debug.Log($"Cube passed at pass nb : {passes}");
-            //
-            ////DebugDrawCube(cube);
-            //
-            //if((marchingCubesLookupTable.edgeTable[cubeIndex] & 1) != 0)
-            //    vertList[0] = InterpolateTwoPoints(cube.cubePoints[0], cube.cubePoints[1]);
-            //if((marchingCubesLookupTable.edgeTable[cubeIndex] & 2) != 0)
-            //    vertList[1] = InterpolateTwoPoints(cube.cubePoints[1], cube.cubePoints[2]);
-            //if((marchingCubesLookupTable.edgeTable[cubeIndex] & 4) != 0)
-            //    vertList[2] = InterpolateTwoPoints(cube.cubePoints[2], cube.cubePoints[3]);
-            //if((marchingCubesLookupTable.edgeTable[cubeIndex] & 8) != 0)
-            //    vertList[3] = InterpolateTwoPoints(cube.cubePoints[3], cube.cubePoints[0]);
-            //if((marchingCubesLookupTable.edgeTable[cubeIndex] & 16) != 0)
-            //    vertList[4] = InterpolateTwoPoints(cube.cubePoints[4], cube.cubePoints[5]);
-            //if((marchingCubesLookupTable.edgeTable[cubeIndex] & 32) != 0)
-            //    vertList[5] = InterpolateTwoPoints(cube.cubePoints[5], cube.cubePoints[6]);
-            //if((marchingCubesLookupTable.edgeTable[cubeIndex] & 64) != 0)
-            //    vertList[6] = InterpolateTwoPoints(cube.cubePoints[6], cube.cubePoints[7]);
-            //if((marchingCubesLookupTable.edgeTable[cubeIndex] & 128) != 0)
-            //    vertList[7] = InterpolateTwoPoints(cube.cubePoints[7], cube.cubePoints[4]);
-            //if((marchingCubesLookupTable.edgeTable[cubeIndex] & 256) != 0)
-            //    vertList[8] = InterpolateTwoPoints(cube.cubePoints[0], cube.cubePoints[4]);
-            //if((marchingCubesLookupTable.edgeTable[cubeIndex] & 512) != 0)
-            //    vertList[9] = InterpolateTwoPoints(cube.cubePoints[1], cube.cubePoints[5]);
-            //if((marchingCubesLookupTable.edgeTable[cubeIndex] & 1024) != 0)
-            //    vertList[10] = InterpolateTwoPoints(cube.cubePoints[2], cube.cubePoints[6]);
-            //if((marchingCubesLookupTable.edgeTable[cubeIndex] & 2048) != 0)
-            //    vertList[11] = InterpolateTwoPoints(cube.cubePoints[3], cube.cubePoints[7]);
-            //
-            //int ntriang = 0;
-            //
-            //for(int i = 0; marchingCubesLookupTable.triTable[cubeIndex, i] != -1; i += 3)
-            //{
-            //    VerticeList.Add(vertList[marchingCubesLookupTable.triTable[cubeIndex, i]].position);
-            //    VerticeList.Add(vertList[marchingCubesLookupTable.triTable[cubeIndex, i + 1]].position);
-            //    VerticeList.Add(vertList[marchingCubesLookupTable.triTable[cubeIndex, i + 2]].position);
-            //
-            //    TriangleList.Add(VerticeList.Count - 3);
-            //    TriangleList.Add(VerticeList.Count - 2);
-            //    TriangleList.Add(VerticeList.Count - 1);
-            //    ntriang++;
-            //    //Debug.Log(tri.vertices[1].position);
-            //    //Debug.Log(marchingCubesLookupTable.triTable[cubeIndex, i]);
-            //}
-
-
+            PointData[] vertList = new PointData[12];
+            uint cubeIndex = 0;
+            
+            if(cube.cubePoints[0].IsoLevel < IsoSurfaceLimit)
+                cubeIndex |= 1;
+            if(cube.cubePoints[1].IsoLevel < IsoSurfaceLimit)
+                cubeIndex |= 2;
+            if(cube.cubePoints[2].IsoLevel < IsoSurfaceLimit)
+                cubeIndex |= 4;
+            if(cube.cubePoints[3].IsoLevel < IsoSurfaceLimit)
+                cubeIndex |= 8;
+            if(cube.cubePoints[4].IsoLevel < IsoSurfaceLimit)
+                cubeIndex |= 16;
+            if(cube.cubePoints[5].IsoLevel < IsoSurfaceLimit)
+                cubeIndex |= 32;
+            if(cube.cubePoints[6].IsoLevel < IsoSurfaceLimit)
+                cubeIndex |= 64;
+            if(cube.cubePoints[7].IsoLevel < IsoSurfaceLimit)
+                cubeIndex |= 128;
+            
+            if(marchingCubesLookupTable.edgeTable[cubeIndex] == 0)
+                return;
+            
+            //Debug.Log($"Cube passed at pass nb : {passes}");
+            
+            //DebugDrawCube(cube);
+            
+            if((marchingCubesLookupTable.edgeTable[cubeIndex] & 1) != 0)
+                vertList[0] = InterpolateTwoPoints(cube.cubePoints[0], cube.cubePoints[1]);
+            if((marchingCubesLookupTable.edgeTable[cubeIndex] & 2) != 0)
+                vertList[1] = InterpolateTwoPoints(cube.cubePoints[1], cube.cubePoints[2]);
+            if((marchingCubesLookupTable.edgeTable[cubeIndex] & 4) != 0)
+                vertList[2] = InterpolateTwoPoints(cube.cubePoints[2], cube.cubePoints[3]);
+            if((marchingCubesLookupTable.edgeTable[cubeIndex] & 8) != 0)
+                vertList[3] = InterpolateTwoPoints(cube.cubePoints[3], cube.cubePoints[0]);
+            if((marchingCubesLookupTable.edgeTable[cubeIndex] & 16) != 0)
+                vertList[4] = InterpolateTwoPoints(cube.cubePoints[4], cube.cubePoints[5]);
+            if((marchingCubesLookupTable.edgeTable[cubeIndex] & 32) != 0)
+                vertList[5] = InterpolateTwoPoints(cube.cubePoints[5], cube.cubePoints[6]);
+            if((marchingCubesLookupTable.edgeTable[cubeIndex] & 64) != 0)
+                vertList[6] = InterpolateTwoPoints(cube.cubePoints[6], cube.cubePoints[7]);
+            if((marchingCubesLookupTable.edgeTable[cubeIndex] & 128) != 0)
+                vertList[7] = InterpolateTwoPoints(cube.cubePoints[7], cube.cubePoints[4]);
+            if((marchingCubesLookupTable.edgeTable[cubeIndex] & 256) != 0)
+                vertList[8] = InterpolateTwoPoints(cube.cubePoints[0], cube.cubePoints[4]);
+            if((marchingCubesLookupTable.edgeTable[cubeIndex] & 512) != 0)
+                vertList[9] = InterpolateTwoPoints(cube.cubePoints[1], cube.cubePoints[5]);
+            if((marchingCubesLookupTable.edgeTable[cubeIndex] & 1024) != 0)
+                vertList[10] = InterpolateTwoPoints(cube.cubePoints[2], cube.cubePoints[6]);
+            if((marchingCubesLookupTable.edgeTable[cubeIndex] & 2048) != 0)
+                vertList[11] = InterpolateTwoPoints(cube.cubePoints[3], cube.cubePoints[7]);
+            
+            int ntriang = 0;
+            
+            for(int i = 0; marchingCubesLookupTable.triTable[cubeIndex, i] != -1; i += 3)
+            {
+                VerticeList.Add(vertList[marchingCubesLookupTable.triTable[cubeIndex, i]].position);
+                VerticeList.Add(vertList[marchingCubesLookupTable.triTable[cubeIndex, i + 1]].position);
+                VerticeList.Add(vertList[marchingCubesLookupTable.triTable[cubeIndex, i + 2]].position);
+            
+                TriangleList.Add(VerticeList.Count - 3);
+                TriangleList.Add(VerticeList.Count - 2);
+                TriangleList.Add(VerticeList.Count - 1);
+                ntriang++;
+                //Debug.Log(tri.vertices[1].position);
+                //Debug.Log(marchingCubesLookupTable.triTable[cubeIndex, i]);
+            }
         }
 
         /// <summary>
@@ -254,27 +252,28 @@ namespace MarchingCube
         /// </summary>
         private void CreateCubes()
         {
-            for(int x = 0; x < steps.x; x++)
+            for(int y = 0; y < _steps.y; y++)
             {
-                for(int y = 0; y < steps.y; y++)
+                for(int z = 0; z < _steps.z; z++)
                 {
-                    for(int z = 0; z < steps.z; z++)
+                    for(int x = 0; x < _steps.x; x++)
                     {
                         int[,] indexPoints = new int[8,3]
                             {
-                                {x  ,z  ,y  },
-                                {x+1,z  ,y  },
-                                {x+1,z+1,y  },
-                                {x  ,z+1,y  },
-                                {x  ,z  ,y+1},
-                                {x+1,z  ,y+1},
-                                {x+1,z+1,y+1},
-                                {x  ,z+1,y+1}
+                                {x  ,y  ,z  },
+                                {x+1,y  ,z  },
+                                {x+1,y+1,z  },
+                                {x  ,y+1,z  },
+                                     
+                                {x  ,y  ,z+1},
+                                {x+1,y  ,z+1},
+                                {x+1,y+1,z+1},
+                                {x  ,y+1,z+1}
                             };
 
 
                         Cube cube = new Cube(indexPoints);
-                        Debug.Log(cube.PointList.Length);
+                        //Debug.Log(cube.PointList.Length);
                         //cube.cubePoints = new PointData[8] {
                         //    points[x  , y  , z],
                         //    points[x+1, y  , z],
@@ -401,25 +400,25 @@ namespace MarchingCube
         /// <param name="cube">The cube to draw in Unity scene window</param>
         private void DebugDrawCube(Cube cube)
         {
-            Debug.DrawLine(GetPointWithIndex(cube.GetValueAtRow(0)).Position, GetPointWithIndex(cube.GetValueAtRow(1)).Position, new Color(0, 1, 0, 1), 10f);
-            Debug.DrawLine(GetPointWithIndex(cube.GetValueAtRow(1)).Position, GetPointWithIndex(cube.GetValueAtRow(2)).Position, new Color(0, 1, 0, 1), 10f);
-            Debug.DrawLine(GetPointWithIndex(cube.GetValueAtRow(2)).Position, GetPointWithIndex(cube.GetValueAtRow(3)).Position, new Color(0, 1, 0, 1), 10f);
-            Debug.DrawLine(GetPointWithIndex(cube.GetValueAtRow(3)).Position, GetPointWithIndex(cube.GetValueAtRow(0)).Position, new Color(0, 1, 0, 1), 10f);
-            
-            Debug.DrawLine(GetPointWithIndex(cube.GetValueAtRow(4)).Position, GetPointWithIndex(cube.GetValueAtRow(5)).Position, new Color(0, 1, 0, 1), 10f);
-            Debug.DrawLine(GetPointWithIndex(cube.GetValueAtRow(5)).Position, GetPointWithIndex(cube.GetValueAtRow(6)).Position, new Color(0, 1, 0, 1), 10f);
-            Debug.DrawLine(GetPointWithIndex(cube.GetValueAtRow(6)).Position, GetPointWithIndex(cube.GetValueAtRow(7)).Position, new Color(0, 1, 0, 1), 10f);
-            Debug.DrawLine(GetPointWithIndex(cube.GetValueAtRow(7)).Position, GetPointWithIndex(cube.GetValueAtRow(4)).Position, new Color(0, 1, 0, 1), 10f);
-            
-            Debug.DrawLine(GetPointWithIndex(cube.GetValueAtRow(0)).Position, GetPointWithIndex(cube.GetValueAtRow(4)).Position, new Color(0, 1, 0, 1), 10f);
-            Debug.DrawLine(GetPointWithIndex(cube.GetValueAtRow(1)).Position, GetPointWithIndex(cube.GetValueAtRow(5)).Position, new Color(0, 1, 0, 1), 10f);
-            Debug.DrawLine(GetPointWithIndex(cube.GetValueAtRow(2)).Position, GetPointWithIndex(cube.GetValueAtRow(6)).Position, new Color(0, 1, 0, 1), 10f);
-            Debug.DrawLine(GetPointWithIndex(cube.GetValueAtRow(3)).Position, GetPointWithIndex(cube.GetValueAtRow(7)).Position, new Color(0, 1, 0, 1), 10f);
+            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(0)).Position, GetPointFromIndex(cube.GetValueAtRow(1)).Position, new Color(1, 0, 0, 1), 10f);
+            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(1)).Position, GetPointFromIndex(cube.GetValueAtRow(2)).Position, new Color(1, 0, 0, 1), 10f);
+            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(2)).Position, GetPointFromIndex(cube.GetValueAtRow(3)).Position, new Color(1, 0, 0, 1), 10f);
+            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(3)).Position, GetPointFromIndex(cube.GetValueAtRow(0)).Position, new Color(1, 0, 0, 1), 10f);
+           
+            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(4)).Position, GetPointFromIndex(cube.GetValueAtRow(5)).Position, new Color(1, 0, 0, 1), 10f);
+            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(5)).Position, GetPointFromIndex(cube.GetValueAtRow(6)).Position, new Color(1, 0, 0, 1), 10f);
+            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(6)).Position, GetPointFromIndex(cube.GetValueAtRow(7)).Position, new Color(1, 0, 0, 1), 10f);
+            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(7)).Position, GetPointFromIndex(cube.GetValueAtRow(4)).Position, new Color(1, 0, 0, 1), 10f);
+           
+            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(0)).Position, GetPointFromIndex(cube.GetValueAtRow(4)).Position, new Color(1, 0, 0, 1), 10f);
+            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(1)).Position, GetPointFromIndex(cube.GetValueAtRow(5)).Position, new Color(1, 0, 0, 1), 10f);
+            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(2)).Position, GetPointFromIndex(cube.GetValueAtRow(6)).Position, new Color(1, 0, 0, 1), 10f);
+            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(3)).Position, GetPointFromIndex(cube.GetValueAtRow(7)).Position, new Color(1, 0, 0, 1), 10f);
         }
 
-        private Point GetPointWithIndex(int[] index)
+        private Point GetPointFromIndex(int[] index)
         {
-            return _pointList[index[0], index[2], index[1]];
+            return _pointList[index[0], index[1], index[2]];
         }
     }
 }
