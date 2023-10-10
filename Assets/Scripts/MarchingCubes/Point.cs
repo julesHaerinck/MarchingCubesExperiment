@@ -18,6 +18,11 @@ namespace MarchingCube
             _isosurfaceValue = isosurfaceValue;
             _position = position;
         }
+        public Point()
+        {
+            _isosurfaceValue = 0;
+            _position = Vector3.zero;
+        }
 
     }
 }
