@@ -22,6 +22,9 @@ namespace MarchingCube
 {
     public class MarchingCubesGeneration : MonoBehaviour
     {
+        /*************
+        Public Fields
+        **************/
         [Header("Awake")]
         public Vector3 BoundingBox = Vector3.one;
         public MeshFilter MeshFilter;
@@ -36,16 +39,17 @@ namespace MarchingCube
         [Range(0.001f, 1f)]
         public float IsoSurfaceLimit = 1f;
         public bool  UseAlternateInterpolation = false;
-        //public List<float> pointList = new List<float>();
 
-        //private List<CubeData> CubeList     = new List<CubeData>();
-        //private List<Point> _pointList    = new List<Point>();
-        private List<Cube>  _cubeList     = new List<Cube>();
-        private List<int>   _triangleList = new List<int>();
 
-        private Vector3Int _steps;
-        private Point[,,]  _pointList;
-        private Mesh       _newMesh;
+        /***************
+         Private Fields
+         ***************/
+        private List<Cube>    _cubeList     = new List<Cube>();
+        private List<int>     _triangleList = new List<int>();
+        private List<Vector3> _verticesList = new List<Vector3>();
+        private Vector3Int    _steps;
+        private Point[,,]     _pointList;
+        private Mesh          _newMesh;
 
         // Start is called before the first frame update
         void Awake()
@@ -73,7 +77,8 @@ namespace MarchingCube
                             -BoundingBox.z/2 + z * Resolution
                             );                        
 
-                        float noiseSample = 1;
+                        float noiseSample = -pointPosition.y;
+
                         //Debug.Log($"X : {x}, Y : {y}, Z : {z}");
                         Point point = new Point(noiseSample, pointPosition);
                         _pointList[x,y,z] = point;
@@ -93,79 +98,36 @@ namespace MarchingCube
 
             CreateCubes();
             
-            //int passes = 0;
             foreach(Cube cube in _cubeList)
             {
                 DebugDrawCube(cube);
                 CalculateCube(cube);
-                //passes++;
             }
             
-            //DrawCubes();
+            DrawCubes();
         }
 
         // Update is called once per frame
         void Update()
         {
-            // Currently, if I want to update the Iso values of the points at runtime,
-            // I need to recreate the cubes every frame because the struct 
-            //_cubeList.Clear();
-            //CreateCubes();
-            //
-            ////int passes = 0;
-            //UpdatePointsIsoValues();
-            //VerticeList.Clear();
-            //TriangleList.Clear();
-            //foreach(CubeData cube in CubeList)
-            //{
-            //    CalculateCube(cube);
-            //    //passes++;
-            //}
-            //
-            ////Debug.Log(CubeList.Count);
-            //DrawCubes();
 
         }
-
-        // Visualize the points present in the boinding box
-        /*
-        private void OnDrawGizmos()
-        {
-            Vector3 steps = BoundingBox / Resolution;
-
-            // x
-            for(int i = 0; i <= (int)steps.x + 1; i++)
-            {
-                // y
-                for(int j = 0; j <= (int)steps.y + 1; j++)
-                {
-                    // z
-                    for(int k = 0; k <= (int)steps.z + 1; k++)
-                    {
-                        Vector3 pointPosition = new Vector3(-BoundingBox.x/2 + i* Resolution, -BoundingBox.y/2 + j * Resolution, -BoundingBox.z/2 + k * Resolution);
-                        Gizmos.color = new Color(pointPosition.y, 0, 0, 1);
-                        Gizmos.DrawSphere(pointPosition, SphereSize);
-                    }
-                }
-            }
-        }
-        */
 
         /// <summary>
         /// Creates the mesh based on the cubes calculations
         /// </summary>
         private void DrawCubes()
         {
-            //meshFilter.mesh.Clear();
-            ////Debug.Log(VerticeList.Count);
-            //NewMesh.vertices = VerticeList.ToArray();
+            MeshFilter.mesh.Clear();
+            //Debug.Log(VerticeList.Count);
+            _newMesh.vertices = _verticesList.ToArray();
+            _newMesh.triangles = _triangleList.ToArray();
+            MeshFilter.mesh = _newMesh;
+            //Debug.Log(meshFilter.mesh.vertices.Length);
             //NewMesh.triangles = TriangleList.ToArray();
-            //meshFilter.mesh = NewMesh;
-            ////Debug.Log(meshFilter.mesh.vertices.Length);
-            ////NewMesh.triangles = TriangleList.ToArray();
-            ////NewMesh.vert
-            //VerticeList.Clear();
-            //TriangleList.Clear();
+            //NewMesh.vert
+            _verticesList.Clear();
+            _triangleList.Clear();
         }
 
         // Inefficient mesh generation.
@@ -178,24 +140,24 @@ namespace MarchingCube
         /// <param name="cube">The cube to calculate</param>
         private void CalculateCube(Cube cube, int passes = -1)
         {
-            PointData[] vertList = new PointData[12];
+            Point[] vertPointList = new Point[12];
             uint cubeIndex = 0;
             
-            if(cube.cubePoints[0].IsoLevel < IsoSurfaceLimit)
+            if(GetPointFromIndex(cube.GetValueAtRow(0)).IsosurfaceValue < IsoSurfaceLimit)
                 cubeIndex |= 1;
-            if(cube.cubePoints[1].IsoLevel < IsoSurfaceLimit)
+            if(GetPointFromIndex(cube.GetValueAtRow(1)).IsosurfaceValue < IsoSurfaceLimit)
                 cubeIndex |= 2;
-            if(cube.cubePoints[2].IsoLevel < IsoSurfaceLimit)
+            if(GetPointFromIndex(cube.GetValueAtRow(2)).IsosurfaceValue < IsoSurfaceLimit)
                 cubeIndex |= 4;
-            if(cube.cubePoints[3].IsoLevel < IsoSurfaceLimit)
+            if(GetPointFromIndex(cube.GetValueAtRow(3)).IsosurfaceValue < IsoSurfaceLimit)
                 cubeIndex |= 8;
-            if(cube.cubePoints[4].IsoLevel < IsoSurfaceLimit)
+            if(GetPointFromIndex(cube.GetValueAtRow(4)).IsosurfaceValue < IsoSurfaceLimit)
                 cubeIndex |= 16;
-            if(cube.cubePoints[5].IsoLevel < IsoSurfaceLimit)
+            if(GetPointFromIndex(cube.GetValueAtRow(5)).IsosurfaceValue < IsoSurfaceLimit)
                 cubeIndex |= 32;
-            if(cube.cubePoints[6].IsoLevel < IsoSurfaceLimit)
+            if(GetPointFromIndex(cube.GetValueAtRow(6)).IsosurfaceValue < IsoSurfaceLimit)
                 cubeIndex |= 64;
-            if(cube.cubePoints[7].IsoLevel < IsoSurfaceLimit)
+            if(GetPointFromIndex(cube.GetValueAtRow(7)).IsosurfaceValue < IsoSurfaceLimit)
                 cubeIndex |= 128;
             
             if(marchingCubesLookupTable.edgeTable[cubeIndex] == 0)
@@ -203,44 +165,42 @@ namespace MarchingCube
             
             //Debug.Log($"Cube passed at pass nb : {passes}");
             
-            //DebugDrawCube(cube);
-            
             if((marchingCubesLookupTable.edgeTable[cubeIndex] & 1) != 0)
-                vertList[0] = InterpolateTwoPoints(cube.cubePoints[0], cube.cubePoints[1]);
+                vertPointList[0]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(0)), GetPointFromIndex(cube.GetValueAtRow(1)));
             if((marchingCubesLookupTable.edgeTable[cubeIndex] & 2) != 0)
-                vertList[1] = InterpolateTwoPoints(cube.cubePoints[1], cube.cubePoints[2]);
+                vertPointList[1]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(1)), GetPointFromIndex(cube.GetValueAtRow(2)));
             if((marchingCubesLookupTable.edgeTable[cubeIndex] & 4) != 0)
-                vertList[2] = InterpolateTwoPoints(cube.cubePoints[2], cube.cubePoints[3]);
+                vertPointList[2]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(2)), GetPointFromIndex(cube.GetValueAtRow(3)));
             if((marchingCubesLookupTable.edgeTable[cubeIndex] & 8) != 0)
-                vertList[3] = InterpolateTwoPoints(cube.cubePoints[3], cube.cubePoints[0]);
+                vertPointList[3]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(3)), GetPointFromIndex(cube.GetValueAtRow(0)));
             if((marchingCubesLookupTable.edgeTable[cubeIndex] & 16) != 0)
-                vertList[4] = InterpolateTwoPoints(cube.cubePoints[4], cube.cubePoints[5]);
+                vertPointList[4]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(4)), GetPointFromIndex(cube.GetValueAtRow(5)));
             if((marchingCubesLookupTable.edgeTable[cubeIndex] & 32) != 0)
-                vertList[5] = InterpolateTwoPoints(cube.cubePoints[5], cube.cubePoints[6]);
+                vertPointList[5]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(5)), GetPointFromIndex(cube.GetValueAtRow(6)));
             if((marchingCubesLookupTable.edgeTable[cubeIndex] & 64) != 0)
-                vertList[6] = InterpolateTwoPoints(cube.cubePoints[6], cube.cubePoints[7]);
+                vertPointList[6]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(6)), GetPointFromIndex(cube.GetValueAtRow(7)));
             if((marchingCubesLookupTable.edgeTable[cubeIndex] & 128) != 0)
-                vertList[7] = InterpolateTwoPoints(cube.cubePoints[7], cube.cubePoints[4]);
+                vertPointList[7]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(7)), GetPointFromIndex(cube.GetValueAtRow(4)));
             if((marchingCubesLookupTable.edgeTable[cubeIndex] & 256) != 0)
-                vertList[8] = InterpolateTwoPoints(cube.cubePoints[0], cube.cubePoints[4]);
+                vertPointList[8]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(0)), GetPointFromIndex(cube.GetValueAtRow(4)));
             if((marchingCubesLookupTable.edgeTable[cubeIndex] & 512) != 0)
-                vertList[9] = InterpolateTwoPoints(cube.cubePoints[1], cube.cubePoints[5]);
+                vertPointList[9]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(1)), GetPointFromIndex(cube.GetValueAtRow(5)));
             if((marchingCubesLookupTable.edgeTable[cubeIndex] & 1024) != 0)
-                vertList[10] = InterpolateTwoPoints(cube.cubePoints[2], cube.cubePoints[6]);
+                vertPointList[10] = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(2)), GetPointFromIndex(cube.GetValueAtRow(6)));
             if((marchingCubesLookupTable.edgeTable[cubeIndex] & 2048) != 0)
-                vertList[11] = InterpolateTwoPoints(cube.cubePoints[3], cube.cubePoints[7]);
+                vertPointList[11] = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(3)), GetPointFromIndex(cube.GetValueAtRow(7)));
             
             int ntriang = 0;
             
             for(int i = 0; marchingCubesLookupTable.triTable[cubeIndex, i] != -1; i += 3)
             {
-                VerticeList.Add(vertList[marchingCubesLookupTable.triTable[cubeIndex, i]].position);
-                VerticeList.Add(vertList[marchingCubesLookupTable.triTable[cubeIndex, i + 1]].position);
-                VerticeList.Add(vertList[marchingCubesLookupTable.triTable[cubeIndex, i + 2]].position);
-            
-                TriangleList.Add(VerticeList.Count - 3);
-                TriangleList.Add(VerticeList.Count - 2);
-                TriangleList.Add(VerticeList.Count - 1);
+                _verticesList.Add(vertPointList[marchingCubesLookupTable.triTable[cubeIndex, i    ]].Position);
+                _verticesList.Add(vertPointList[marchingCubesLookupTable.triTable[cubeIndex, i + 1]].Position);
+                _verticesList.Add(vertPointList[marchingCubesLookupTable.triTable[cubeIndex, i + 2]].Position);
+                
+                _triangleList.Add(_verticesList.Count - 3);
+                _triangleList.Add(_verticesList.Count - 2);
+                _triangleList.Add(_verticesList.Count - 1);
                 ntriang++;
                 //Debug.Log(tri.vertices[1].position);
                 //Debug.Log(marchingCubesLookupTable.triTable[cubeIndex, i]);
@@ -271,20 +231,7 @@ namespace MarchingCube
                                 {x  ,y+1,z+1}
                             };
 
-
                         Cube cube = new Cube(indexPoints);
-                        //Debug.Log(cube.PointList.Length);
-                        //cube.cubePoints = new PointData[8] {
-                        //    points[x  , y  , z],
-                        //    points[x+1, y  , z],
-                        //    points[x+1, y+1, z],
-                        //    points[x  , y+1, z],
-                        //
-                        //    points[x  , y  , z+1],
-                        //    points[x+1, y  , z+1],
-                        //    points[x+1, y+1, z+1],
-                        //    points[x  , y+1, z+1]
-                        //};
                         _cubeList.Add(cube);
                     }
                 }
@@ -317,55 +264,25 @@ namespace MarchingCube
         /// <param name="p1">PointData 1</param>
         /// <param name="p2">PointData 2</param>
         /// <returns>New PointData</returns>
-        //private PointData InterpolateTwoPoints(PointData p1, PointData p2)
-        //{
-        //    if(UseAlternateInterpolation)
-        //        return AlternateInterpolation(p1, p2);
-        //
-        //
-        //    if(Compare(p1, p2))
-        //    {
-        //        PointData temp;
-        //        temp = p1;
-        //        p1 = p2;
-        //        p2 = temp;
-        //    }
-        //
-        //    PointData p = new PointData();
-        //
-        //    if(Mathf.Abs(p1.IsoLevel - p2.IsoLevel) > 0.00001)
-        //        p.position = p1.position + (p2.position - p1.position) / (p2.IsoLevel - p1.IsoLevel) * (IsoSurfaceLimit - p1.IsoLevel);
-        //    else
-        //        p = p1;
-        //
-        //    return p;
-        //}
+        private Point InterpolateTwoPoints(Point p1, Point p2)
+        {
+            if(Compare(p1, p2))
+            {
+                Point temp;
+                temp = p1;
+                p1 = p2;
+                p2 = temp;
+            }
 
-        /// <summary>
-        /// Alternate way to calculate the middle point between the two points given
-        /// </summary>
-        /// <param name="p1">PointData 1</param>
-        /// <param name="p2">PointData 2</param>
-        /// <returns>New PointData</returns>
-        //private PointData AlternateInterpolation(PointData p1, PointData p2)
-        //{
-        //    //PointData point = new PointData();
-        //
-        //    if(Mathf.Abs(IsoSurfaceLimit - p1.IsoLevel) < 0.00001)
-        //        return p1;
-        //    if(Mathf.Abs(IsoSurfaceLimit - p2.IsoLevel) < 0.00001)
-        //        return p2;
-        //    if(Mathf.Abs(p1.IsoLevel - p2.IsoLevel) < 0.00001)
-        //        return p1;
-        //
-        //    PointData point = new PointData();
-        //    float isoValue = (IsoSurfaceLimit - p1.IsoLevel) / (p2.IsoLevel - p1.IsoLevel);
-        //
-        //    point.IsoLevel = isoValue;
-        //    point.position = p1.position + isoValue * (p2.position - p1.position);
-        //
-        //    return point;
-        //}
+            Point p = new Point();
+        
+            if(Mathf.Abs(p1.IsosurfaceValue - p2.IsosurfaceValue) > 0.00001)
+                p.Position = p1.Position + (p2.Position - p1.Position) / (p2.IsosurfaceValue - p1.IsosurfaceValue) * (IsoSurfaceLimit - p1.IsosurfaceValue);
+            else
+                p = p1;
+        
+            return p;
+        }
 
         /// <summary>
         /// Compares two points. Similar to the < operator
@@ -373,26 +290,26 @@ namespace MarchingCube
         /// <param name="p1">PointData one</param>
         /// <param name="p2">PointData two</param>
         /// <returns>true if p2 is greater than p1</returns>
-        //private bool Compare(PointData p1, PointData p2)
-        //{
-        //    if(p1.position.x < p2.position.x)
-        //        return true;
-        //    else if(p1.position.x > p2.position.x)
-        //        return false;
-        //
-        //    if(p1.position.y < p2.position.y)
-        //        return true;
-        //    else if(p1.position.y > p2.position.y)
-        //        return false;
-        //
-        //    if(p1.position.z < p2.position.z)
-        //        return true;
-        //    else if(p1.position.z > p2.position.z)
-        //        return false;
-        //
-        //
-        //    return false;
-        //}
+        private bool Compare(Point p1, Point p2)
+        {
+            if(p1.Position.x < p2.Position.x)
+                return true;
+            else if(p1.Position.x > p2.Position.x)
+                return false;
+        
+            if(p1.Position.y < p2.Position.y)
+                return true;
+            else if(p1.Position.y > p2.Position.y)
+                return false;
+        
+            if(p1.Position.z < p2.Position.z)
+                return true;
+            else if(p1.Position.z > p2.Position.z)
+                return false;
+        
+        
+            return false;
+        }
 
         /// <summary>
         /// Helper function. Draws the cube given in parameter
@@ -422,50 +339,3 @@ namespace MarchingCube
         }
     }
 }
-
-
-// Bits of code that might be usefulls later
-// Will delete at some points
-
-
-/*
- * '
- *             VerticeList.Add(new Vector3[3]
-            {
-                vertList[marchingCubesLookupTable.triTable[cubeIndex, i]].position,
-                vertList[marchingCubesLookupTable.triTable[cubeIndex, i+1]].position,
-                vertList[marchingCubesLookupTable.triTable[cubeIndex, i+2]].position,
-            });
- *         if (x < right.x)
-            return true;
-        else if (x > right.x)
-            return false;
-
-        if (y < right.y)
-            return true;
-        else if (y > right.y)
-            return false;
-
-        if (z < right.z)
-            return true;
-        else if (z > right.z)
-            return false;
-
-        return false;
- *                     cube.VerticePosition = new Vector3[8]
-                    {
-                        new Vector3(i  , j  , k  ),
-                        new Vector3(i+1, j  , k  ),
-                        new Vector3(i+1, j+1, k  ),
-                        new Vector3(i  , j+1, k  ),
-
-                        new Vector3(i  , j  , k+1),
-                        new Vector3(i+1, j  , k+1),
-                        new Vector3(i+1, j+1, k+1),
-                        new Vector3(i  , j+1, k+1)
-                    };
-
-                    cube.IsosurfaceValue = new float[8] { 
-                        
-                    };
- */
