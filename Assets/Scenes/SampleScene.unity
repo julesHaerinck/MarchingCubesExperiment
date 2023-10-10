@@ -153,9 +153,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   BoundingBox: {x: 16, y: 10, z: 16}
   meshFilter: {fileID: 491653748}
-  IsoSurfaceLimit: 0.434
-  Resolution: 0.5
+  IsoSurfaceLimit: 0.512
+  Resolution: 1
   SphereSize: 0.2
+  NoiseMultiplier: 1
 --- !u!4 &491653746
 Transform:
   m_ObjectHideFlags: 0
