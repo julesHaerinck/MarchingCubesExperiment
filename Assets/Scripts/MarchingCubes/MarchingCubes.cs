@@ -19,17 +19,21 @@ public struct PointData
 //[ExecuteInEditMode]
 public class MarchingCubes : MonoBehaviour
 {
+    [Header("Awake")]
     public Vector3 BoundingBox = Vector3.one;
     public MeshFilter meshFilter;
-    [Range(0.001f, 1f)]
-    public float IsoSurfaceLimit = 1f;
-    [Range(0.2f, 5f)]
-    public float Resolution = 1f;
-
-    //public float GizmosSphereSize = .5f;
     public float SphereSize = .5f;
     public float NoiseMultiplier = 1f;
+
+    [Range(0.2f, 5f)]
+    public float Resolution = 1f;
+    public GameObject SphereParent;
+
+    [Header("Update")]
+    [Range(0.001f, 1f)]
+    public float IsoSurfaceLimit = 1f;
     public bool  UseAlternateInterpolation = false;
+    public List<float> pointList = new List<float>();
 
     private List<CubeData> CubeList     = new List<CubeData>();
     private List<Vector3>  VerticeList  = new List<Vector3>();
@@ -49,25 +53,25 @@ public class MarchingCubes : MonoBehaviour
                 (int)(BoundingBox.y / Resolution),
                 (int)(BoundingBox.z / Resolution)
             );
-        points = new PointData[steps.x+2, steps.y+2, steps.z+2];
+        points = new PointData[steps.x+1, steps.y+1, steps.z+1];
 
         // x
-        for(int i = 0; i <= steps.x + 1; i++)
+        for(int i = 0; i <= steps.x ; i++)
         {
             // y
-            for(int j = 0; j <= steps.y + 1; j++)
+            for(int j = 0; j <= steps.y ; j++)
             {
                 // z
-                for(int k = 0; k <= steps.z + 1; k++)
+                for(int k = 0; k <= steps.z ; k++)
                 {
                     Vector3 pointPosition = new Vector3(-BoundingBox.x/2 + i* Resolution, -BoundingBox.y/2 + j * Resolution, -BoundingBox.z/2 + k * Resolution);
                     float noiseSample = 1;
-                    if(pointPosition.x > 3 && pointPosition.x < 9)
-                        noiseSample = 0;
-                    if(pointPosition.z > 3 && pointPosition.z < 9)
-                        noiseSample = 0;                    
-                    if(pointPosition.y > 3 && pointPosition.y < 9)
-                        noiseSample = 0;
+                    //if(pointPosition.x > 3 && pointPosition.x < 9)
+                    //    noiseSample = 0;
+                    //if(pointPosition.z > 3 && pointPosition.z < 9)
+                    //    noiseSample = 0;                    
+                    //if(pointPosition.y > 3 && pointPosition.y < 9)
+                    //    noiseSample = 0;
                     //float noiseSample = -pointPosition.y + Mathf.PerlinNoise((float)i/steps.x, (float)j/steps.y);
                     //float noiseSample = Random.Range(0f,1f);
                     //float noiseSample = Mathf.PerlinNoise((float)i/steps.x, (float)j/steps.y);
@@ -75,12 +79,14 @@ public class MarchingCubes : MonoBehaviour
                     points[i, j, k] = new PointData();
                     points[i, j, k].position = pointPosition;
                     points[i, j, k].IsoLevel = noiseSample;
+                    pointList.Add(points[i, j, k].IsoLevel);
                     if(points[i, j, k].IsoLevel > IsoSurfaceLimit)
                     {
                         GameObject PointView = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                         PointView.transform.position = pointPosition;
                         PointView.transform.localScale = new Vector3(SphereSize, SphereSize, SphereSize);
                         PointView.GetComponent<Renderer>().material.SetColor("_Color", new Color(noiseSample, noiseSample, noiseSample));
+                        PointView.transform.parent = SphereParent.transform;
                     }
                     //Debug.Log(points[i, j, k].IsoLevel);
                 }
@@ -104,9 +110,13 @@ public class MarchingCubes : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //CreateCubes();
+        // Currently, if I want to update the Iso values of the points at runtime,
+        // I need to recreate the cubes every frame because the struct 
+        CubeList.Clear();
+        CreateCubes();
 
         //int passes = 0;
+        UpdatePointsIsoValues();
         VerticeList.Clear();
         TriangleList.Clear();
         foreach(CubeData cube in CubeList)
@@ -239,11 +249,11 @@ public class MarchingCubes : MonoBehaviour
     /// </summary>
     private void CreateCubes()
     {
-        for(int x = 0; x <= steps.x; x++)
+        for(int x = 0; x < steps.x; x++)
         {
-            for(int y = 0; y <= steps.y; y++)
+            for(int y = 0; y < steps.y; y++)
             {
-                for(int z = 0; z <= steps.z; z++)
+                for(int z = 0; z < steps.z; z++)
                 {
                     CubeData cube = new CubeData();
                     cube.cubePoints = new PointData[8] {
@@ -258,6 +268,25 @@ public class MarchingCubes : MonoBehaviour
                         points[x  , y+1, z+1]
                     };
                     CubeList.Add(cube);
+                }
+            }
+        }
+    }
+
+    private void UpdatePointsIsoValues()
+    {
+        int index = 0;
+        for(int i = 0; i <= steps.x; i++)
+        {
+            // y
+            for(int j = 0; j <= steps.y; j++)
+            {
+                // z
+                for(int k = 0; k <= steps.z; k++)
+                {
+                    points[i, j, k].IsoLevel = pointList[index];
+                    index++;
+                    //Debug.Log(points[i, j, k].IsoLevel);
                 }
             }
         }
