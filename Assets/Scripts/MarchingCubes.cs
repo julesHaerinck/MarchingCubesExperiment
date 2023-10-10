@@ -21,7 +21,7 @@ public class MarchingCubes : MonoBehaviour
 {
     public Vector3 BoundingBox = Vector3.one;
     public MeshFilter meshFilter;
-    [Range(0f, 1f)]
+    [Range(0.001f, 1f)]
     public float IsoSurfaceLimit = 1f;
     [Range(0.2f, 5f)]
     public float Resolution = 1f;
@@ -39,7 +39,7 @@ public class MarchingCubes : MonoBehaviour
     private Mesh NewMesh;
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         NewMesh = new Mesh();
         
@@ -105,11 +105,13 @@ public class MarchingCubes : MonoBehaviour
     {
         //CreateCubes();
 
-        int passes = 0;
+        //int passes = 0;
+        VerticeList.Clear();
+        TriangleList.Clear();
         foreach(CubeData cube in CubeList)
         {
-            CalculateCube(cube, passes);
-            passes++;
+            CalculateCube(cube);
+            //passes++;
         }
 
         //Debug.Log(CubeList.Count);
@@ -141,6 +143,9 @@ public class MarchingCubes : MonoBehaviour
     }
     */
 
+    /// <summary>
+    /// Creates the mesh based on the cubes calculations
+    /// </summary>
     private void DrawCubes()
     {
         meshFilter.mesh.Clear();
@@ -157,8 +162,13 @@ public class MarchingCubes : MonoBehaviour
 
     // Inefficient mesh generation.
     // The vertices and triangles are added indiscriminately instead of ignoring the points already 
-    // in the vertice list, resulting in meshes with 1700 vertecies instead of 300
-    private void CalculateCube(CubeData cube, int passes)
+    // in the vertice list, resulting in meshes with 1700 vertices instead of 300
+    /// <summary>
+    /// Calculates and looks up the appropriate arragment of vertices and triangles based on the cubes 
+    /// points values and appends to a list of vertices and triangles for later use to build the mesh
+    /// </summary>
+    /// <param name="cube">The cube to calculate</param>
+    private void CalculateCube(CubeData cube, int passes = -1)
     {
         PointData[] vertList = new PointData[12];
         uint cubeIndex = 0;
@@ -223,6 +233,9 @@ public class MarchingCubes : MonoBehaviour
 
     }
 
+    /// <summary>
+    /// Creates the list of cubes to later execute the algorithm
+    /// </summary>
     private void CreateCubes()
     {
         for(int x = 0; x <= steps.x; x++)
@@ -249,6 +262,12 @@ public class MarchingCubes : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Calculates the middle point between the two points given
+    /// </summary>
+    /// <param name="p1">PointData 1</param>
+    /// <param name="p2">PointData 2</param>
+    /// <returns>New PointData</returns>
     private PointData InterpolateTwoPoints(PointData p1, PointData p2)
     {
         
@@ -270,7 +289,12 @@ public class MarchingCubes : MonoBehaviour
         return p;
     }
 
-
+    /// <summary>
+    /// Compares two points. Similar to the < operator
+    /// </summary>
+    /// <param name="p1">PointData one</param>
+    /// <param name="p2">PointData two</param>
+    /// <returns>true if p2 is greater than p1</returns>
     private bool Compare(PointData p1, PointData p2)
     {
         if(p1.position.x < p2.position.x)
@@ -292,6 +316,10 @@ public class MarchingCubes : MonoBehaviour
         return false;
     }
 
+    /// <summary>
+    /// Helper function. Draws the cube given in parameter
+    /// </summary>
+    /// <param name="cube">The cube to draw in Unity scene window</param>
     private void DebugDrawCube(CubeData cube)
     {
         Debug.DrawLine(cube.cubePoints[0].position, cube.cubePoints[1].position, new Color(0, cube.cubePoints[0].position.y, 0, 1), 10f);
