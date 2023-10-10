@@ -8,6 +8,7 @@ public class Cube
     /// Stores the index of the 8 points making the cube
     /// </summary>
     private int[] _pointList;
+    public int[] PointList { get; set; }
 
     public Cube(int[] pointList)
     {
@@ -39,6 +40,8 @@ public class Cube
         else
             _pointList[index] = value;
     }
+
+    /*
     /// <summary>
     /// Get the full list of indexes 
     /// </summary>
@@ -58,5 +61,6 @@ public class Cube
         else
             return;
     }
+    */
 
 }
