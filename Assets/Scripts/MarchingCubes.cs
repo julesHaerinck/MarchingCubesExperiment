@@ -28,7 +28,7 @@ public class MarchingCubes : MonoBehaviour
 
     //public float GizmosSphereSize = .5f;
     public float SphereSize = .5f;
-    //public Texture2D NoiseTextur
+    public float NoiseMultiplier = 1f;
 
     private List<CubeData> CubeList     = new List<CubeData>();
     private List<Vector3>  VerticeList  = new List<Vector3>();
@@ -60,19 +60,26 @@ public class MarchingCubes : MonoBehaviour
                 for(int k = 0; k <= steps.z + 1; k++)
                 {
                     Vector3 pointPosition = new Vector3(-BoundingBox.x/2 + i* Resolution, -BoundingBox.y/2 + j * Resolution, -BoundingBox.z/2 + k * Resolution);
-                    float noiseSample = -pointPosition.y + Random.Range(0f, 1f);
+                    float noiseSample = 1;
+                    if(pointPosition.x > 3 && pointPosition.x < 9)
+                        noiseSample = 0;
+                    if(pointPosition.z > 3 && pointPosition.z < 9)
+                        noiseSample = 0;                    
+                    if(pointPosition.y > 3 && pointPosition.y < 9)
+                        noiseSample = 0;
+                    //float noiseSample = -pointPosition.y + Mathf.PerlinNoise((float)i/steps.x, (float)j/steps.y);
                     //float noiseSample = Random.Range(0f,1f);
                     //float noiseSample = Mathf.PerlinNoise((float)i/steps.x, (float)j/steps.y);
-                    
+
                     points[i, j, k] = new PointData();
                     points[i, j, k].position = pointPosition;
                     points[i, j, k].IsoLevel = noiseSample;
                     if(points[i, j, k].IsoLevel > IsoSurfaceLimit)
                     {
-                        //GameObject PointView = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                        //PointView.transform.position = pointPosition;
-                        //PointView.transform.localScale = new Vector3(SphereSize, SphereSize, SphereSize);
-                        //PointView.GetComponent<Renderer>().material.SetColor("_Color", new Color(noiseSample, noiseSample, noiseSample));
+                        GameObject PointView = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                        PointView.transform.position = pointPosition;
+                        PointView.transform.localScale = new Vector3(SphereSize, SphereSize, SphereSize);
+                        PointView.GetComponent<Renderer>().material.SetColor("_Color", new Color(noiseSample, noiseSample, noiseSample));
                     }
                     //Debug.Log(points[i, j, k].IsoLevel);
                 }
@@ -96,7 +103,17 @@ public class MarchingCubes : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        //CreateCubes();
 
+        int passes = 0;
+        foreach(CubeData cube in CubeList)
+        {
+            CalculateCube(cube, passes);
+            passes++;
+        }
+
+        //Debug.Log(CubeList.Count);
+        DrawCubes();
 
     }
 
@@ -126,7 +143,7 @@ public class MarchingCubes : MonoBehaviour
 
     private void DrawCubes()
     {
-
+        meshFilter.mesh.Clear();
         //Debug.Log(VerticeList.Count);
         NewMesh.vertices = VerticeList.ToArray();
         NewMesh.triangles = TriangleList.ToArray();
@@ -138,6 +155,9 @@ public class MarchingCubes : MonoBehaviour
         TriangleList.Clear();
     }
 
+    // Inefficient mesh generation.
+    // The vertices and triangles are added indiscriminately instead of ignoring the points already 
+    // in the vertice list, resulting in meshes with 1700 vertecies instead of 300
     private void CalculateCube(CubeData cube, int passes)
     {
         PointData[] vertList = new PointData[12];
