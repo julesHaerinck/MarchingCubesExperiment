@@ -30,6 +30,7 @@ namespace MarchingCube
         public MeshFilter MeshFilter;
         public float SphereSize = .5f;
         public float NoiseMultiplier = 1f;
+        public bool  AddSpheres = false;
 
         [Range(0.2f, 5f)]
         public float      Resolution = 1f;
@@ -38,18 +39,20 @@ namespace MarchingCube
         [Header("Update")]
         [Range(0.001f, 1f)]
         public float IsoSurfaceLimit = 1f;
-        public bool  UseAlternateInterpolation = false;
+        [Range(-10f, 10f)]
+        public float ValueSlider = 0f;
 
 
         /***************
          Private Fields
          ***************/
-        private List<Cube>    _cubeList     = new List<Cube>();
-        private List<int>     _triangleList = new List<int>();
-        private List<Vector3> _verticesList = new List<Vector3>();
-        private Vector3Int    _steps;
-        private Point[,,]     _pointList;
-        private Mesh          _newMesh;
+        private List<Cube>     _cubeList     = new List<Cube>();
+        private List<int>      _triangleList = new List<int>();
+        private List<Vector3>  _verticesList = new List<Vector3>();
+        private Renderer[,,]   _sphereVisualizer;
+        private Vector3Int     _steps;
+        private Point[,,]      _pointList;
+        private Mesh           _newMesh;
 
         // Start is called before the first frame update
         void Awake()
@@ -63,6 +66,7 @@ namespace MarchingCube
                 );
 
             _pointList = new Point[_steps.x + 1, _steps.y + 1, _steps.z + 1];
+            _sphereVisualizer = new Renderer[_steps.x + 1, _steps.y + 1, _steps.z + 1];
 
             //Debug.Log($"X : {steps.x}, Y : {steps.y}, Z : {steps.z}");
             for(int y = 0; y <= _steps.y; y++)
@@ -83,7 +87,7 @@ namespace MarchingCube
                         Point point = new Point(noiseSample, pointPosition);
                         _pointList[x,y,z] = point;
                         
-                        //if(point.IsosurfaceValue > IsoSurfaceLimit)
+                        if(AddSpheres)
                         {
                             GameObject PointView = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                             PointView.name = pointPosition.ToString();
@@ -91,6 +95,7 @@ namespace MarchingCube
                             PointView.transform.localScale = new Vector3(SphereSize, SphereSize, SphereSize);
                             PointView.GetComponent<Renderer>().material.SetColor("_Color", new Color(noiseSample, noiseSample, noiseSample));
                             PointView.transform.parent = SphereParent.transform;
+                            _sphereVisualizer[x, y, z] = PointView.GetComponent<Renderer>();
                         }
                     }
                 }
@@ -100,7 +105,6 @@ namespace MarchingCube
             
             foreach(Cube cube in _cubeList)
             {
-                DebugDrawCube(cube);
                 CalculateCube(cube);
             }
             
@@ -110,7 +114,14 @@ namespace MarchingCube
         // Update is called once per frame
         void Update()
         {
+            UpdatePointsIsoValues();
 
+            foreach(Cube cube in _cubeList)
+            {
+                CalculateCube(cube);
+            }
+
+            DrawCubes();
         }
 
         /// <summary>
@@ -242,20 +253,23 @@ namespace MarchingCube
         private void UpdatePointsIsoValues()
         {
             //int index = 0;
-            //for(int i = 0; i <= steps.x; i++)
-            //{
-            //    // y
-            //    for(int j = 0; j <= steps.y; j++)
-            //    {
-            //        // z
-            //        for(int k = 0; k <= steps.z; k++)
-            //        {
-            //            points[i, j, k].IsoLevel = pointList[index];
-            //            index++;
-            //            //Debug.Log(points[i, j, k].IsoLevel);
-            //        }
-            //    }
-            //}
+            for(int y = 0; y <= _steps.y; y++)
+            {
+                // y
+                for(int z = 0; z <= _steps.z; z++)
+                {
+                    // z
+                    for(int x = 0; x <= _steps.x; x++)
+                    {
+                        float value = (y + ValueSlider) * y ;
+                        _pointList[x, y, z].IsosurfaceValue = -value;
+                        if(AddSpheres)
+                            _sphereVisualizer[x, y, z].material.color = new Color(value, value, value);
+                        //index++
+                        //Debug.Log(points[i, j, k].IsoLevel);
+                    }
+                }
+            }
         }
 
         /// <summary>
