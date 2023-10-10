@@ -10,8 +10,8 @@ namespace MarchingCube
         private float   _isosurfaceValue;
         private Vector3 _position;
 
-        public float IsosurfaceValue { get; set; }
-        public Vector3 Position { get; set; }
+        public float IsosurfaceValue { get => _isosurfaceValue; set { _isosurfaceValue = value; } }
+        public Vector3 Position      { get => _position;        set { _position = value; } }
 
         public Point(float isosurfaceValue, Vector3 position)
         {

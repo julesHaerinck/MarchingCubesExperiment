@@ -4,68 +4,60 @@ using System.Diagnostics;
 
 namespace MarchingCube
 {
-
-
     public class Cube
     {
-        /// <summary>
-        /// Stores the index of the 8 points making the cube
-        /// </summary>
-        private int[] _pointList;
-        public int[] PointList { get; set; }
 
-        public Cube(int[] pointList)
+        private int[,] _pointList = new int[8,3];
+        /// <summary>
+        /// Store the points of the cube.
+        /// Each cube has 8 points. 
+        /// Each point has 3 values (x,y,z)
+        /// Therefore, an array of [8,3]
+        /// </summary>
+        public int[,] PointList { get => _pointList; set { _pointList = value; } }
+
+        public Cube(int[,] pointList)
         {
             _pointList = pointList;
         }
 
 
         /// <summary>
-        /// Returnes the value at a specified index
+        /// Returns the value at a specified index
         /// </summary>
         /// <param name="index"></param>
         /// <returns>-1 if given index is outside of array</returns>
-        public int GetValueAtIndex(int index)
+        public int GetValueAtIndex(int row, int col)
         {
-            if(_pointList.Length < index)
-                return -1;
-            else
-                return _pointList[index];
+            // TODO
+            // Add checks to see if the parameters are inside the array
+            //if(_pointList.Length < index)
+            //    return -1;
+            //else
+            return _pointList[row,col];
+        }
+        /// <summary>
+        /// Returns the values at a specified row
+        /// </summary>
+        /// <param name="row">The rows to get the values from</param>
+        /// <returns>Int array of 3 values</returns>
+        public int[] GetValueAtRow(int row)
+        {
+            return new int[3] { _pointList[row,0], _pointList[row, 1] , _pointList[row, 2] };
         }
         /// <summary>
         /// Set the given value at a specific point in the array
         /// </summary>
         /// <param name="index">Index at which to store the value</param>
         /// <param name="value">value to store</param>
-        public void SetValueAtIndex(int index, int value)
+        public void SetValueAtIndex(int row, int col, int value)
         {
-            if(_pointList.Length < index)
-                return;
-            else
-                _pointList[index] = value;
+            // TODO
+            // Add checks to see if the parameters are inside the array
+            //if(_pointList.Length < index)
+            //    return;
+            //else
+            _pointList[row, col] = value;
         }
-
-        /*
-        /// <summary>
-        /// Get the full list of indexes 
-        /// </summary>
-        /// <returns></returns>
-        public int[] GetPointList()
-        {
-            return _pointList;
-        }
-        /// <summary>
-        /// Set a new list of indexes
-        /// </summary>
-        /// <param name="list">new list of indexes</param>
-        public void SetIndexList(int[] list)
-        {
-            if(_pointList.Length == list.Length)
-                _pointList = list;
-            else
-                return;
-        }
-        */
-
     }
 }
