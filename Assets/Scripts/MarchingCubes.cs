@@ -29,6 +29,7 @@ public class MarchingCubes : MonoBehaviour
     //public float GizmosSphereSize = .5f;
     public float SphereSize = .5f;
     public float NoiseMultiplier = 1f;
+    public bool  UseAlternateInterpolation = false;
 
     private List<CubeData> CubeList     = new List<CubeData>();
     private List<Vector3>  VerticeList  = new List<Vector3>();
@@ -270,7 +271,10 @@ public class MarchingCubes : MonoBehaviour
     /// <returns>New PointData</returns>
     private PointData InterpolateTwoPoints(PointData p1, PointData p2)
     {
-        
+        if(UseAlternateInterpolation)
+            return AlternateInterpolation(p1, p2);
+
+
         if(Compare(p1, p2))
         {
             PointData temp;
@@ -287,6 +291,32 @@ public class MarchingCubes : MonoBehaviour
             p = p1;
 
         return p;
+    }
+
+    /// <summary>
+    /// Alternate way to calculate the middle point between the two points given
+    /// </summary>
+    /// <param name="p1">PointData 1</param>
+    /// <param name="p2">PointData 2</param>
+    /// <returns>New PointData</returns>
+    private PointData AlternateInterpolation(PointData p1, PointData p2)
+    {
+        //PointData point = new PointData();
+
+        if(Mathf.Abs(IsoSurfaceLimit - p1.IsoLevel) < 0.00001)
+            return p1;
+        if(Mathf.Abs(IsoSurfaceLimit - p2.IsoLevel) < 0.00001)
+            return p2;
+        if(Mathf.Abs(p1.IsoLevel - p2.IsoLevel) < 0.00001)
+            return p1;
+        
+        PointData point = new PointData();
+        float isoValue = (IsoSurfaceLimit - p1.IsoLevel) / (p2.IsoLevel - p1.IsoLevel);
+
+        point.IsoLevel = isoValue;
+        point.position = p1.position + isoValue * (p2.position - p1.position);
+
+        return point;
     }
 
     /// <summary>
