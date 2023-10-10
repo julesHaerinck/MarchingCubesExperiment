@@ -2,17 +2,18 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Point : MonoBehaviour
+public class Point
 {
-    // Start is called before the first frame update
-    void Start()
+    private float   _isosurfaceValue;
+    private Vector3 _position;
+
+    public float   IsosurfaceValue { get; set; }
+    public Vector3 Position { get; set; }
+
+    public Point(float isosurfaceValue, Vector3 position)
     {
-        
+        _isosurfaceValue = isosurfaceValue;
+        _position = position;
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 }
