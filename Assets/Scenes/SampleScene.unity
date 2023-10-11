@@ -132,6 +132,7 @@ GameObject:
   - component: {fileID: 491653747}
   - component: {fileID: 491653748}
   - component: {fileID: 491653749}
+  - component: {fileID: 491653750}
   m_Layer: 0
   m_Name: TerrainGeneration
   m_TagString: Untagged
@@ -216,14 +217,38 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 90f04ace199912641b104280a440c12c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  BoundingBox: {x: 5, y: 5, z: 5}
-  MeshFilter: {fileID: 491653748}
+  BoundingBox: {x: 10, y: 10, z: 10}
+  MainMeshFilter: {fileID: 491653748}
+  MainMeshCollider: {fileID: 491653750}
   SphereSize: 0.2
   NoiseMultiplier: 1
-  Resolution: 1
+  AddSpheres: 0
+  Resolution: 0.2
   SphereParent: {fileID: 499093517}
-  IsoSurfaceLimit: 1
-  UseAlternateInterpolation: 0
+  IsoSurfaceLimit: 0.481
+  ValueSlider: 1
+--- !u!64 &491653750
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 491653744}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 0}
 --- !u!1 &499093517
 GameObject:
   m_ObjectHideFlags: 0
@@ -360,6 +385,8 @@ GameObject:
   - component: {fileID: 963194228}
   - component: {fileID: 963194227}
   - component: {fileID: 963194226}
+  - component: {fileID: 963194229}
+  - component: {fileID: 963194230}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -441,6 +468,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &963194229
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963194225}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a35cc27859e554a4da59baa67c5092f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  speed: 10
+  rotationSpeed: 3
+  hideMouse: 1
+--- !u!114 &963194230
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963194225}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bfc57ae06db04a46a8d0fec0a34eb50, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  RaycastDistance: 10
+  HitSphereRadius: 1
+  ModifyStrength: 0.1
+  MarchingCubeMamnager: {fileID: 491653749}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

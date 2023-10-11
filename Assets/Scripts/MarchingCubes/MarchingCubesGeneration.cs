@@ -26,8 +26,9 @@ namespace MarchingCube
         Public Fields
         **************/
         [Header("Awake")]
-        public Vector3 BoundingBox = Vector3.one;
-        public MeshFilter MeshFilter;
+        public Vector3      BoundingBox = Vector3.one;
+        public MeshFilter   MainMeshFilter;
+        public MeshCollider MainMeshCollider;
         public float SphereSize = .5f;
         public float NoiseMultiplier = 1f;
         public bool  AddSpheres = false;
@@ -53,7 +54,7 @@ namespace MarchingCube
         private Vector3Int     _steps;
         private Point[,,]      _pointList;
         private Mesh           _newMesh;
-
+        
         // Start is called before the first frame update
         void Awake()
         {
@@ -114,7 +115,6 @@ namespace MarchingCube
         // Update is called once per frame
         void Update()
         {
-            UpdatePointsIsoValues();
 
             foreach(Cube cube in _cubeList)
             {
@@ -129,11 +129,12 @@ namespace MarchingCube
         /// </summary>
         private void DrawCubes()
         {
-            MeshFilter.mesh.Clear();
+            MainMeshFilter.mesh.Clear();
             //Debug.Log(VerticeList.Count);
             _newMesh.vertices = _verticesList.ToArray();
             _newMesh.triangles = _triangleList.ToArray();
-            MeshFilter.mesh = _newMesh;
+            MainMeshFilter.mesh = _newMesh;
+            MainMeshCollider.sharedMesh = _newMesh; 
             //Debug.Log(meshFilter.mesh.vertices.Length);
             //NewMesh.triangles = TriangleList.ToArray();
             //NewMesh.vert
@@ -261,7 +262,7 @@ namespace MarchingCube
                     // z
                     for(int x = 0; x <= _steps.x; x++)
                     {
-                        float value = (y + ValueSlider) * y ;
+                        float value = -1 ;
                         _pointList[x, y, z].IsosurfaceValue = -value;
                         if(AddSpheres)
                             _sphereVisualizer[x, y, z].material.color = new Color(value, value, value);
@@ -346,10 +347,45 @@ namespace MarchingCube
             Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(2)).Position, GetPointFromIndex(cube.GetValueAtRow(6)).Position, new Color(1, 0, 0, 1), 10f);
             Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(3)).Position, GetPointFromIndex(cube.GetValueAtRow(7)).Position, new Color(1, 0, 0, 1), 10f);
         }
-
         private Point GetPointFromIndex(int[] index)
         {
             return _pointList[index[0], index[1], index[2]];
+        }
+
+        public void UpdateIsoValuesFromCamera(Vector3 hit, float sphereRadius, float strenght)
+        {
+            
+            for(int y = 0; y <= _steps.y; y++)
+            {
+                for(int z = 0; z <= _steps.z; z++)
+                {
+                    for(int x = 0; x <= _steps.x; x++)
+                    {
+                        Vector3 pointPosition = _pointList[x, y, z].Position;
+
+                        if(CalculateIfPointIsInSphere(hit, pointPosition, sphereRadius))
+                            _pointList[x, y, z].IsosurfaceValue += strenght;
+
+                        if(AddSpheres)
+                        {
+                            float value = _pointList[x, y, z].IsosurfaceValue;
+                            _sphereVisualizer[x, y, z].material.color = new Color(value, value, value);
+                        }
+                    }
+                }
+            }
+        }
+
+        private bool CalculateIfPointIsInSphere(Vector3 sphereOrigin, Vector3 point, float sphereRadius)
+        {
+            float x2 = (point.x - sphereOrigin.x) * (point.x - sphereOrigin.x);
+            float y2 = (point.y - sphereOrigin.y) * (point.y - sphereOrigin.y);
+            float z2 = (point.z - sphereOrigin.z) * (point.z - sphereOrigin.z);
+
+            if((x2 + y2 + z2) < (sphereRadius * sphereRadius))
+                return true;
+            else
+                return false;
         }
     }
 }
