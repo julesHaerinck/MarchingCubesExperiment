@@ -115,7 +115,7 @@ namespace MarchingCube
         // Update is called once per frame
         void Update()
         {
-
+            // 
             foreach(Cube cube in _cubeList)
             {
                 CalculateCube(cube);
@@ -134,8 +134,9 @@ namespace MarchingCube
             _newMesh.vertices = _verticesList.ToArray();
             _newMesh.triangles = _triangleList.ToArray();
             MainMeshFilter.mesh = _newMesh;
-            MainMeshCollider.sharedMesh = _newMesh; 
-            //Debug.Log(meshFilter.mesh.vertices.Length);
+            MainMeshFilter.mesh.RecalculateNormals();
+            MainMeshCollider.sharedMesh = _newMesh;
+            //Debug.Log(MainMeshFilter.mesh.normals[0]);
             //NewMesh.triangles = TriangleList.ToArray();
             //NewMesh.vert
             _verticesList.Clear();
