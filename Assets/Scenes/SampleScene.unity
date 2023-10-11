@@ -217,16 +217,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 90f04ace199912641b104280a440c12c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  BoundingBox: {x: 10, y: 10, z: 10}
+  BoundingBox: {x: 20, y: 20, z: 20}
   MainMeshFilter: {fileID: 491653748}
   MainMeshCollider: {fileID: 491653750}
   SphereSize: 0.2
   NoiseMultiplier: 1
   AddSpheres: 0
-  Resolution: 0.2
+  Resolution: 1
   SphereParent: {fileID: 499093517}
-  IsoSurfaceLimit: 0.481
+  IsoSurfaceLimit: 0.5
   ValueSlider: 1
+  ValueSlider2: 1
 --- !u!64 &491653750
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -496,8 +497,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RaycastDistance: 10
-  HitSphereRadius: 1
-  ModifyStrength: 0.1
+  HitSphereRadius: 2
+  ModifyStrength: 0.05
   MarchingCubeMamnager: {fileID: 491653749}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

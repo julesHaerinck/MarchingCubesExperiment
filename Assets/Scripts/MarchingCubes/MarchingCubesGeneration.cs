@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using TreeEditor;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -29,32 +30,38 @@ namespace MarchingCube
         public Vector3      BoundingBox = Vector3.one;
         public MeshFilter   MainMeshFilter;
         public MeshCollider MainMeshCollider;
-        public float SphereSize = .5f;
+        public float SphereSize      = .5f;
         public float NoiseMultiplier = 1f;
-        public bool  AddSpheres = false;
+        public bool  AddSpheres      = false;
 
         [Range(0.2f, 5f)]
         public float      Resolution = 1f;
         public GameObject SphereParent;
 
         [Header("Update")]
-        [Range(0.001f, 1f)]
+        [Range(-10f, 10f)]
         public float IsoSurfaceLimit = 1f;
         [Range(-10f, 10f)]
-        public float ValueSlider = 0f;
+        public float ValueSlider     = 0f;        
+        [Range(-10f, 10f)]
+        public float ValueSlider2    = 0f;
 
 
         /***************
          Private Fields
          ***************/
-        private List<Cube>     _cubeList     = new List<Cube>();
-        private List<int>      _triangleList = new List<int>();
-        private List<Vector3>  _verticesList = new List<Vector3>();
-        private Renderer[,,]   _sphereVisualizer;
-        private Vector3Int     _steps;
-        private Point[,,]      _pointList;
-        private Mesh           _newMesh;
+        private List<Cube>     _cubeList       = new List<Cube>();    // all the cubes in the defined space
+        private List<Cube>     _renderCubeList = new List<Cube>();    // only the cubes that need to be used to create the mesh
+        private List<int>      _triangleList   = new List<int>();     // list of index corresponding to the vertice used by triangle
+        private List<Vector3>  _verticesList   = new List<Vector3>(); // list of vertices used by the mesh
+        private Point[]        _vertPointList  = new Point[12];       // list of vertex used during cube calculation
+
+        private Renderer[,,]   _sphereVisualizer;  // array of renderer representing the spheres (to help visulize)
+        private Vector3Int     _steps;             // number of steps defining how many points are in each directions
+        private Point[,,]      _pointList;         // array of all the points in the space
+        private Mesh           _newMesh;           // terrain mesh
         
+
         // Start is called before the first frame update
         void Awake()
         {
@@ -83,7 +90,9 @@ namespace MarchingCube
                             );                        
 
                         float noiseSample = -pointPosition.y;
+                        //float noiseSample = -pointPosition.y;
 
+                        //Debug.Log(noiseSample);
                         //Debug.Log($"X : {x}, Y : {y}, Z : {z}");
                         Point point = new Point(noiseSample, pointPosition);
                         _pointList[x,y,z] = point;
@@ -103,25 +112,36 @@ namespace MarchingCube
             }
 
             CreateCubes();
+
+            
             
             foreach(Cube cube in _cubeList)
             {
                 CalculateCube(cube);
             }
-            
+            //Debug.Log(_renderCubeList.Count);
             DrawCubes();
         }
 
         // Update is called once per frame
-        void Update()
+        void FixedUpdate()
         {
-            // 
-            foreach(Cube cube in _cubeList)
+            //if(Input.GetMouseButton(0) || Input.GetMouseButton(1))
             {
-                CalculateCube(cube);
+                //List<Cube> tempList = _renderCubeList;
+
+                foreach(Cube cube in _cubeList)
+                {
+
+                    //Debug.Log("inside foreach");
+                    //DebugDrawCube(cube, 0.01f);
+                    CalculateCube(cube);
+                    
+                }
+
+                DrawCubes();
             }
 
-            DrawCubes();
         }
 
         /// <summary>
@@ -129,10 +149,13 @@ namespace MarchingCube
         /// </summary>
         private void DrawCubes()
         {
+            _newMesh = new Mesh();
             MainMeshFilter.mesh.Clear();
-            //Debug.Log(VerticeList.Count);
+            //Debug.Log($"Vetices : {_verticesList.Count}, Triangles : {_triangleList.Count}");
+
             _newMesh.vertices = _verticesList.ToArray();
             _newMesh.triangles = _triangleList.ToArray();
+            
             MainMeshFilter.mesh = _newMesh;
             MainMeshFilter.mesh.RecalculateNormals();
             MainMeshCollider.sharedMesh = _newMesh;
@@ -153,7 +176,7 @@ namespace MarchingCube
         /// <param name="cube">The cube to calculate</param>
         private void CalculateCube(Cube cube, int passes = -1)
         {
-            Point[] vertPointList = new Point[12];
+            
             uint cubeIndex = 0;
             
             if(GetPointFromIndex(cube.GetValueAtRow(0)).IsosurfaceValue < IsoSurfaceLimit)
@@ -174,42 +197,48 @@ namespace MarchingCube
                 cubeIndex |= 128;
             
             if(marchingCubesLookupTable.edgeTable[cubeIndex] == 0)
+            {
+                //if(_renderCubeList.Contains(cube))
+                //    _renderCubeList.Remove(cube);
                 return;
+            }
+            //_renderCubeList.Add(cube);
             
+            //DebugDrawCube(cube, 0.01f);
             //Debug.Log($"Cube passed at pass nb : {passes}");
             
             if((marchingCubesLookupTable.edgeTable[cubeIndex] & 1) != 0)
-                vertPointList[0]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(0)), GetPointFromIndex(cube.GetValueAtRow(1)));
+                _vertPointList[0]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(0)), GetPointFromIndex(cube.GetValueAtRow(1)));
             if((marchingCubesLookupTable.edgeTable[cubeIndex] & 2) != 0)
-                vertPointList[1]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(1)), GetPointFromIndex(cube.GetValueAtRow(2)));
+                _vertPointList[1]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(1)), GetPointFromIndex(cube.GetValueAtRow(2)));
             if((marchingCubesLookupTable.edgeTable[cubeIndex] & 4) != 0)
-                vertPointList[2]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(2)), GetPointFromIndex(cube.GetValueAtRow(3)));
+                _vertPointList[2]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(2)), GetPointFromIndex(cube.GetValueAtRow(3)));
             if((marchingCubesLookupTable.edgeTable[cubeIndex] & 8) != 0)
-                vertPointList[3]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(3)), GetPointFromIndex(cube.GetValueAtRow(0)));
+                _vertPointList[3]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(3)), GetPointFromIndex(cube.GetValueAtRow(0)));
             if((marchingCubesLookupTable.edgeTable[cubeIndex] & 16) != 0)
-                vertPointList[4]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(4)), GetPointFromIndex(cube.GetValueAtRow(5)));
+                _vertPointList[4]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(4)), GetPointFromIndex(cube.GetValueAtRow(5)));
             if((marchingCubesLookupTable.edgeTable[cubeIndex] & 32) != 0)
-                vertPointList[5]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(5)), GetPointFromIndex(cube.GetValueAtRow(6)));
+                _vertPointList[5]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(5)), GetPointFromIndex(cube.GetValueAtRow(6)));
             if((marchingCubesLookupTable.edgeTable[cubeIndex] & 64) != 0)
-                vertPointList[6]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(6)), GetPointFromIndex(cube.GetValueAtRow(7)));
+                _vertPointList[6]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(6)), GetPointFromIndex(cube.GetValueAtRow(7)));
             if((marchingCubesLookupTable.edgeTable[cubeIndex] & 128) != 0)
-                vertPointList[7]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(7)), GetPointFromIndex(cube.GetValueAtRow(4)));
+                _vertPointList[7]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(7)), GetPointFromIndex(cube.GetValueAtRow(4)));
             if((marchingCubesLookupTable.edgeTable[cubeIndex] & 256) != 0)
-                vertPointList[8]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(0)), GetPointFromIndex(cube.GetValueAtRow(4)));
+                _vertPointList[8]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(0)), GetPointFromIndex(cube.GetValueAtRow(4)));
             if((marchingCubesLookupTable.edgeTable[cubeIndex] & 512) != 0)
-                vertPointList[9]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(1)), GetPointFromIndex(cube.GetValueAtRow(5)));
+                _vertPointList[9]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(1)), GetPointFromIndex(cube.GetValueAtRow(5)));
             if((marchingCubesLookupTable.edgeTable[cubeIndex] & 1024) != 0)
-                vertPointList[10] = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(2)), GetPointFromIndex(cube.GetValueAtRow(6)));
+                _vertPointList[10] = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(2)), GetPointFromIndex(cube.GetValueAtRow(6)));
             if((marchingCubesLookupTable.edgeTable[cubeIndex] & 2048) != 0)
-                vertPointList[11] = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(3)), GetPointFromIndex(cube.GetValueAtRow(7)));
+                _vertPointList[11] = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(3)), GetPointFromIndex(cube.GetValueAtRow(7)));
             
             int ntriang = 0;
             
             for(int i = 0; marchingCubesLookupTable.triTable[cubeIndex, i] != -1; i += 3)
             {
-                _verticesList.Add(vertPointList[marchingCubesLookupTable.triTable[cubeIndex, i    ]].Position);
-                _verticesList.Add(vertPointList[marchingCubesLookupTable.triTable[cubeIndex, i + 1]].Position);
-                _verticesList.Add(vertPointList[marchingCubesLookupTable.triTable[cubeIndex, i + 2]].Position);
+                _verticesList.Add(_vertPointList[marchingCubesLookupTable.triTable[cubeIndex, i    ]].Position);
+                _verticesList.Add(_vertPointList[marchingCubesLookupTable.triTable[cubeIndex, i + 1]].Position);
+                _verticesList.Add(_vertPointList[marchingCubesLookupTable.triTable[cubeIndex, i + 2]].Position);
                 
                 _triangleList.Add(_verticesList.Count - 3);
                 _triangleList.Add(_verticesList.Count - 2);
@@ -250,28 +279,6 @@ namespace MarchingCube
                 }
             }
            
-        }
-
-        private void UpdatePointsIsoValues()
-        {
-            //int index = 0;
-            for(int y = 0; y <= _steps.y; y++)
-            {
-                // y
-                for(int z = 0; z <= _steps.z; z++)
-                {
-                    // z
-                    for(int x = 0; x <= _steps.x; x++)
-                    {
-                        float value = -1 ;
-                        _pointList[x, y, z].IsosurfaceValue = -value;
-                        if(AddSpheres)
-                            _sphereVisualizer[x, y, z].material.color = new Color(value, value, value);
-                        //index++
-                        //Debug.Log(points[i, j, k].IsoLevel);
-                    }
-                }
-            }
         }
 
         /// <summary>
@@ -331,41 +338,50 @@ namespace MarchingCube
         /// Helper function. Draws the cube given in parameter
         /// </summary>
         /// <param name="cube">The cube to draw in Unity scene window</param>
-        private void DebugDrawCube(Cube cube)
+        private void DebugDrawCube(Cube cube, float time = 1f)
         {
-            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(0)).Position, GetPointFromIndex(cube.GetValueAtRow(1)).Position, new Color(1, 0, 0, 1), 10f);
-            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(1)).Position, GetPointFromIndex(cube.GetValueAtRow(2)).Position, new Color(1, 0, 0, 1), 10f);
-            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(2)).Position, GetPointFromIndex(cube.GetValueAtRow(3)).Position, new Color(1, 0, 0, 1), 10f);
-            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(3)).Position, GetPointFromIndex(cube.GetValueAtRow(0)).Position, new Color(1, 0, 0, 1), 10f);
-           
-            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(4)).Position, GetPointFromIndex(cube.GetValueAtRow(5)).Position, new Color(1, 0, 0, 1), 10f);
-            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(5)).Position, GetPointFromIndex(cube.GetValueAtRow(6)).Position, new Color(1, 0, 0, 1), 10f);
-            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(6)).Position, GetPointFromIndex(cube.GetValueAtRow(7)).Position, new Color(1, 0, 0, 1), 10f);
-            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(7)).Position, GetPointFromIndex(cube.GetValueAtRow(4)).Position, new Color(1, 0, 0, 1), 10f);
-           
-            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(0)).Position, GetPointFromIndex(cube.GetValueAtRow(4)).Position, new Color(1, 0, 0, 1), 10f);
-            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(1)).Position, GetPointFromIndex(cube.GetValueAtRow(5)).Position, new Color(1, 0, 0, 1), 10f);
-            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(2)).Position, GetPointFromIndex(cube.GetValueAtRow(6)).Position, new Color(1, 0, 0, 1), 10f);
-            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(3)).Position, GetPointFromIndex(cube.GetValueAtRow(7)).Position, new Color(1, 0, 0, 1), 10f);
+            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(0)).Position, GetPointFromIndex(cube.GetValueAtRow(1)).Position, new Color(1, 0, 0, 1), time);
+            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(1)).Position, GetPointFromIndex(cube.GetValueAtRow(2)).Position, new Color(1, 0, 0, 1), time);
+            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(2)).Position, GetPointFromIndex(cube.GetValueAtRow(3)).Position, new Color(1, 0, 0, 1), time);
+            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(3)).Position, GetPointFromIndex(cube.GetValueAtRow(0)).Position, new Color(1, 0, 0, 1), time);
+                                                                                                                                                        
+            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(4)).Position, GetPointFromIndex(cube.GetValueAtRow(5)).Position, new Color(1, 0, 0, 1), time);
+            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(5)).Position, GetPointFromIndex(cube.GetValueAtRow(6)).Position, new Color(1, 0, 0, 1), time);
+            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(6)).Position, GetPointFromIndex(cube.GetValueAtRow(7)).Position, new Color(1, 0, 0, 1), time);
+            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(7)).Position, GetPointFromIndex(cube.GetValueAtRow(4)).Position, new Color(1, 0, 0, 1), time);
+                                                                                                                                                        
+            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(0)).Position, GetPointFromIndex(cube.GetValueAtRow(4)).Position, new Color(1, 0, 0, 1), time);
+            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(1)).Position, GetPointFromIndex(cube.GetValueAtRow(5)).Position, new Color(1, 0, 0, 1), time);
+            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(2)).Position, GetPointFromIndex(cube.GetValueAtRow(6)).Position, new Color(1, 0, 0, 1), time);
+            Debug.DrawLine(GetPointFromIndex(cube.GetValueAtRow(3)).Position, GetPointFromIndex(cube.GetValueAtRow(7)).Position, new Color(1, 0, 0, 1), time);
         }
+
         private Point GetPointFromIndex(int[] index)
         {
             return _pointList[index[0], index[1], index[2]];
         }
 
-        public void UpdateIsoValuesFromCamera(Vector3 hit, float sphereRadius, float strenght)
+        public void UpdateIsoValuesFromCamera(Vector3 hit, float sphereRadius = 1f, float strenght = 0.1f)
         {
-            
             for(int y = 0; y <= _steps.y; y++)
             {
                 for(int z = 0; z <= _steps.z; z++)
                 {
                     for(int x = 0; x <= _steps.x; x++)
                     {
+                        //float value = _pointList[x,y,z].IsosurfaceValue + Mathf.Sin(Time.time * ValueSlider2) * ValueSlider;
+                        //_pointList[x, y, z].IsosurfaceValue = value;
                         Vector3 pointPosition = _pointList[x, y, z].Position;
+                        float isoValue = _pointList[x, y, z].IsosurfaceValue + strenght;
+
+                        if(isoValue > 1)
+                            isoValue = 1;
+                        else if(isoValue <= 0)
+                            isoValue = 0;
 
                         if(CalculateIfPointIsInSphere(hit, pointPosition, sphereRadius))
-                            _pointList[x, y, z].IsosurfaceValue += strenght;
+                            _pointList[x, y, z].IsosurfaceValue = isoValue;
+                        
 
                         if(AddSpheres)
                         {
@@ -388,5 +404,7 @@ namespace MarchingCube
             else
                 return false;
         }
+
+        //private Cube[] GetCubesWithPoint()
     }
 }
