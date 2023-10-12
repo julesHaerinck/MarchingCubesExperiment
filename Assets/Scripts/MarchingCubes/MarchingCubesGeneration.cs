@@ -40,17 +40,18 @@ namespace MarchingCube
 		// TODO 12/10/23
 		// Since there are a lot of arrays, maybe check if there is an impact on memory usage
 
-		private List<Cube>     _cubeList       = new List<Cube>();    // all the cubes in the defined space
-		private List<Cube>     _renderCubeList = new List<Cube>();    // only the cubes that need to be used to create the mesh
-		private List<int>      _triangleList   = new List<int>();     // list of index corresponding to the vertice used by triangle
-		private List<Vector3>  _verticesList   = new List<Vector3>(); // list of vertices used by the mesh
-		private Point[]        _vertPointList  = new Point[12];       // list of vertex used during cube calculation
+		private List<Cube>    _cubeList      = new List<Cube>();    // all the cubes in the defined space
+		private List<int>     _cubeIndexList = new List<int>();     // only the cubes that need to be used to create the mesh
+		private List<int>     _triangleList  = new List<int>();     // list of index corresponding to the vertice used by triangle
+		private List<Vector3> _verticesList  = new List<Vector3>(); // list of vertices used by the mesh
+		private Point[]       _vertPointList = new Point[12];       // list of vertex used during cube calculation
+        private bool          _shouldUpdate  = false;
 
-		private Renderer[,,]   _sphereVisualizer;  // array of renderer representing the spheres (to help visulize)
-		private Vector3Int     _steps;             // number of steps defining how many points are in each directions
-		private Point[,,]      _pointList;         // array of all the points in the space
-		private Mesh           _newMesh;           // terrain mesh
-
+        private Renderer[,,] _sphereVisualizer;  // array of renderer representing the spheres (to help visulize)
+		private Vector3Int   _steps;             // number of steps defining how many points are in each directions
+		private Point[,,]    _pointList;         // array of all the points in the space
+		private Mesh         _newMesh;           // terrain mesh
+		
 		// Uses the point coordinates as the key and stores an array of 8 int
 		// corresponding the the index of all the cubes associated to them (a point can only have up to 8 cubes)
 		private Dictionary<string, int[]> _listOfCubesPerPoints = new Dictionary<string, int[]>();
@@ -121,14 +122,18 @@ namespace MarchingCube
 		{
 			if(Input.GetMouseButton(0) || Input.GetMouseButton(1))
 			{
-				foreach(Cube cube in _cubeList)
-				{
-					CalculateCube(cube);
-				}
-
-				DrawCubes();
+				if(_shouldUpdate)
+                {
+                    foreach(int cubeIndex in _cubeIndexList)
+                    {
+                        CalculateCube(_cubeList[cubeIndex]);
+                        //DebugDrawCube(_cubeList[cubeIndex]);
+                    }
+                    _cubeIndexList.Clear();
+                    DrawCubes();
+                }
+				_shouldUpdate = false;
 			}
-
 		}
 
 		/// <summary>
@@ -149,7 +154,6 @@ namespace MarchingCube
 			_verticesList.Clear();
 			_triangleList.Clear();
 		}
-
 
 		/// <summary>
 		/// Calculates and looks up the appropriate arragment of vertices and triangles based on the cubes 
@@ -305,6 +309,8 @@ namespace MarchingCube
 			return p;
 		}
 
+		// TODO 12/10/23
+		// replace the function by the < operator overload
 		/// <summary>
 		/// Compares two points. Similar to the < operator
 		/// </summary>
@@ -359,34 +365,53 @@ namespace MarchingCube
 			return _pointList[index[0], index[1], index[2]];
 		}
 
+		// TODO 12/10/23
+		// comment the function
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="hit"></param>
+		/// <param name="sphereRadius"></param>
+		/// <param name="strenght"></param>
 		public void UpdateIsoValuesFromCamera(Vector3 hit, float sphereRadius = 1f, float strenght = 0.1f)
 		{
+			_shouldUpdate = true;
 			for(int y = 0; y <= _steps.y; y++)
 			{
 				for(int z = 0; z <= _steps.z; z++)
 				{
 					for(int x = 0; x <= _steps.x; x++)
 					{
-						Vector3 pointPosition = _pointList[x, y, z].Position;
-						float isoValue = _pointList[x, y, z].IsosurfaceValue + strenght;
+                        Vector3 pointPosition = _pointList[x, y, z].Position;
+                        //if(!CheckIfPointIsInSphere(hit, pointPosition, sphereRadius))
+						//	continue;
 
-						if(isoValue > 1)
+                        float isoValue = _pointList[x, y, z].IsosurfaceValue + strenght;
+
+                        string pointName = $"{x},{y},{z}";
+
+						_listOfCubesPerPoints[pointName].ToList().ForEach(p => { if(p == -1) return; _cubeIndexList.Add(p); });
+
+                        if(!CheckIfPointIsInSphere(hit, pointPosition, sphereRadius))
+                            continue;
+
+                        if(isoValue > 1)
 							isoValue = 1;
 						else if(isoValue <= 0)
 							isoValue = 0;
-
-						if(CheckIfPointIsInSphere(hit, pointPosition, sphereRadius))
-							_pointList[x, y, z].IsosurfaceValue = isoValue;
+			
+						//if(CheckIfPointIsInSphere(hit, pointPosition, sphereRadius))
+						_pointList[x, y, z].IsosurfaceValue = isoValue;
 						
-
+			
 						if(AddSpheres)
 						{
-							float value = _pointList[x, y, z].IsosurfaceValue;
-							_sphereVisualizer[x, y, z].material.color = new Color(value, value, value);
+							_sphereVisualizer[x, y, z].material.color = new Color(isoValue, isoValue, isoValue);
 						}
 					}
 				}
 			}
+			_listOfCubesPerPoints.Distinct();
 		}
 		
 		/// <summary>
@@ -398,14 +423,18 @@ namespace MarchingCube
 		/// <returns>true if point is in sphere, false if not</returns>
 		private bool CheckIfPointIsInSphere(Vector3 sphereOrigin, Vector3 point, float sphereRadius)
 		{
-			float x2 = (point.x - sphereOrigin.x) * (point.x - sphereOrigin.x);
-			float y2 = (point.y - sphereOrigin.y) * (point.y - sphereOrigin.y);
-			float z2 = (point.z - sphereOrigin.z) * (point.z - sphereOrigin.z);
-
-			if((x2 + y2 + z2) < (sphereRadius * sphereRadius))
-				return true;
-			else
+			//float x2 = (point.x - sphereOrigin.x) * (point.x - sphereOrigin.x);
+			//float y2 = (point.y - sphereOrigin.y) * (point.y - sphereOrigin.y);
+			//float z2 = (point.z - sphereOrigin.z) * (point.z - sphereOrigin.z);
+			//
+			//if((x2 + y2 + z2) < (sphereRadius * sphereRadius))
+			//	return true;
+			//else
+			//	return false;
+			if(Vector3.Distance(sphereOrigin, point) > sphereRadius)
 				return false;
+			else
+				return true;
 		}
 	}
 }
