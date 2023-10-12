@@ -14,6 +14,7 @@ public class CameraTerrainModifier : MonoBehaviour
     public MarchingCubesGeneration MarchingCubeMamnager;
 
     private RaycastHit hit;
+    float value;
     // Start is called before the first frame update
     void Start()
     {
@@ -26,7 +27,7 @@ public class CameraTerrainModifier : MonoBehaviour
         
         if(Input.GetMouseButton(0) || Input.GetMouseButton(1))
         {
-            float value = -1;
+            value = -1;
             if(Input.GetMouseButton(0))
                 value = ModifyStrength;
             else
