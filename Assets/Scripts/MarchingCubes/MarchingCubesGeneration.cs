@@ -1,21 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
 
-/*
-public struct CubeData
-{
-	public PointData[] cubePoints;
-}
-
-public struct PointData
-{
-	public Vector3 position;
-	public float   IsoLevel;
-}
-*/
 
 //[ExecuteInEditMode]
 namespace MarchingCube
@@ -76,15 +63,12 @@ namespace MarchingCube
             _pointList = new Point[_steps.x + 1, _steps.y + 1, _steps.z + 1];
 			_sphereVisualizer = new Renderer[_steps.x + 1, _steps.y + 1, _steps.z + 1];
 
-			//Debug.Log($"X : {steps.x}, Y : {steps.y}, Z : {steps.z}");
 			for(int y = 0; y <= _steps.y; y++)
 			{
 				for(int z = 0; z <= _steps.z; z++)
 				{
 					for(int x = 0; x <= _steps.x; x++)
 					{
-                        //Debug.Log($"{x},{y},{z}");
-
 						// for some reason, when it is just {x}{y}{z}, some keys are duplicates.
 						// adding commas seems to fix the issue
                         _listOfCubesPerPoints.Add($"{x},{y},{z}", new int[8] { -1, -1, -1, -1, -1, -1, -1, -1 });
@@ -96,10 +80,7 @@ namespace MarchingCube
 							);                        
 
 						float noiseSample = -pointPosition.y;
-						//float noiseSample = -pointPosition.y;
 
-						//Debug.Log(noiseSample);
-						//Debug.Log($"X : {x}, Y : {y}, Z : {z}");
 						Point point = new Point(noiseSample, pointPosition);
 						_pointList[x,y,z] = point;
 						if(AddSpheres)
@@ -117,27 +98,12 @@ namespace MarchingCube
 			}
             
             CreateCubes();
-			//IndexCubesBasedOnPoints();
-			//{
-			//	foreach(var i in _listOfCubesPerPoints)
-			//	{
-            //		string temp = "{ ";
-            //		var j = i.Value;
-			//		foreach(int val in j)
-			//		{
-			//			temp += $"{val}, ";
-			//		}
-			//		Debug.Log(temp + " }");
-			//	}
-            //}
-
 
 
             foreach(Cube cube in _cubeList)
 			{
 				CalculateCube(cube);
 			}
-			//Debug.Log(_renderCubeList.Count);
 			DrawCubes();
 		}
 
@@ -146,15 +112,9 @@ namespace MarchingCube
 		{
 			if(Input.GetMouseButton(0) || Input.GetMouseButton(1))
 			{
-				//List<Cube> tempList = _renderCubeList;
-
 				foreach(Cube cube in _cubeList)
 				{
-
-					//Debug.Log("inside foreach");
-					//DebugDrawCube(cube, 0.01f);
 					CalculateCube(cube);
-					
 				}
 
 				DrawCubes();
@@ -169,7 +129,6 @@ namespace MarchingCube
 		{
 			_newMesh = new Mesh();
 			MainMeshFilter.mesh.Clear();
-			//Debug.Log($"Vetices : {_verticesList.Count}, Triangles : {_triangleList.Count}");
 
 			_newMesh.vertices = _verticesList.ToArray();
 			_newMesh.triangles = _triangleList.ToArray();
@@ -177,9 +136,7 @@ namespace MarchingCube
 			MainMeshFilter.mesh = _newMesh;
 			MainMeshFilter.mesh.RecalculateNormals();
 			MainMeshCollider.sharedMesh = _newMesh;
-			//Debug.Log(MainMeshFilter.mesh.normals[0]);
-			//NewMesh.triangles = TriangleList.ToArray();
-			//NewMesh.vert
+
 			_verticesList.Clear();
 			_triangleList.Clear();
 		}
@@ -215,15 +172,8 @@ namespace MarchingCube
 				cubeIndex |= 128;
 			
 			if(marchingCubesLookupTable.edgeTable[cubeIndex] == 0)
-			{
-				//if(_renderCubeList.Contains(cube))
-				//    _renderCubeList.Remove(cube);
 				return;
-			}
-			//_renderCubeList.Add(cube);
 			
-			//DebugDrawCube(cube, 0.01f);
-			//Debug.Log($"Cube passed at pass nb : {passes}");
 			
 			if((marchingCubesLookupTable.edgeTable[cubeIndex] & 1) != 0)
 				_vertPointList[0]  = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(0)), GetPointFromIndex(cube.GetValueAtRow(1)));
@@ -262,13 +212,12 @@ namespace MarchingCube
 				_triangleList.Add(_verticesList.Count - 2);
 				_triangleList.Add(_verticesList.Count - 1);
 				ntriang++;
-				//Debug.Log(tri.vertices[1].position);
-				//Debug.Log(marchingCubesLookupTable.triTable[cubeIndex, i]);
 			}
 		}
 
 		/// <summary>
 		/// Creates the list of cubes to later execute the algorithm
+		/// Also links the points to the cubes that uses them
 		/// </summary>
 		private void CreateCubes()
 		{
@@ -408,8 +357,6 @@ namespace MarchingCube
 				{
 					for(int x = 0; x <= _steps.x; x++)
 					{
-						//float value = _pointList[x,y,z].IsosurfaceValue + Mathf.Sin(Time.time * ValueSlider2) * ValueSlider;
-						//_pointList[x, y, z].IsosurfaceValue = value;
 						Vector3 pointPosition = _pointList[x, y, z].Position;
 						float isoValue = _pointList[x, y, z].IsosurfaceValue + strenght;
 
@@ -450,33 +397,21 @@ namespace MarchingCube
 			else
 				return false;
 		}
-
-		// TODO
-		// Function only called once in Awake but if extremelly inneficient
-		// need to think of a way to improve it
-		// maybe 
-		/// <summary>
-		/// 
-		/// </summary>
-		private void IndexCubesBasedOnPoints()
-		{
-			// a point can only have a maximum of 8 cubes
-            uint[] cubeIndex = new uint[8];
-			string pointName;
-            for(int y = 0; y <= _steps.y; y++)
-			{
-				for(int z = 0; z <= _steps.z; z++)
-				{
-					for(int x = 0; x <= _steps.x; x++)
-					{
-						pointName = $"{x}{y}{z}";
-						foreach(Cube cube in _cubeList)
-						{
-
-						}
-					}
-				}
-			}
-		}
 	}
 }
+
+
+
+//IndexCubesBasedOnPoints();
+//{
+//	foreach(var i in _listOfCubesPerPoints)
+//	{
+//		string temp = "{ ";
+//		var j = i.Value;
+//		foreach(int val in j)
+//		{
+//			temp += $"{val}, ";
+//		}
+//		Debug.Log(temp + " }");
+//	}
+//}
