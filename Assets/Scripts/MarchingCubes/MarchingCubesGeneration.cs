@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+// Marching cubes Algorithm take from the website 
+// https://paulbourke.net/geometry/polygonise/
 
-//[ExecuteInEditMode]
 namespace MarchingCube
 {
 	public class MarchingCubesGeneration : MonoBehaviour
@@ -36,6 +37,9 @@ namespace MarchingCube
 		/***************
 		 Private Fields
 		 ***************/
+		// TODO 12/10/23
+		// Since there are a lot of arrays, maybe check if there is an impact on memory usage
+
 		private List<Cube>     _cubeList       = new List<Cube>();    // all the cubes in the defined space
 		private List<Cube>     _renderCubeList = new List<Cube>();    // only the cubes that need to be used to create the mesh
 		private List<int>      _triangleList   = new List<int>();     // list of index corresponding to the vertice used by triangle
@@ -47,6 +51,8 @@ namespace MarchingCube
 		private Point[,,]      _pointList;         // array of all the points in the space
 		private Mesh           _newMesh;           // terrain mesh
 
+		// Uses the point coordinates as the key and stores an array of 8 int
+		// corresponding the the index of all the cubes associated to them (a point can only have up to 8 cubes)
 		private Dictionary<string, int[]> _listOfCubesPerPoints = new Dictionary<string, int[]>();
 
 		// Start is called before the first frame update
@@ -54,16 +60,18 @@ namespace MarchingCube
 		{
 			_newMesh = new Mesh();
 
+			// calculates how many steps there can be, inside the bounds defined, depending on the resolution
 			_steps = new Vector3Int(
-				(int)(BoundingBox.x / Resolution),
-				(int)(BoundingBox.y / Resolution),
-				(int)(BoundingBox.z / Resolution)
+					(int)(BoundingBox.x / Resolution),
+					(int)(BoundingBox.y / Resolution),
+					(int)(BoundingBox.z / Resolution)
 				);
 
-            _pointList = new Point[_steps.x + 1, _steps.y + 1, _steps.z + 1];
+            _pointList        = new Point[_steps.x + 1, _steps.y + 1, _steps.z + 1];
 			_sphereVisualizer = new Renderer[_steps.x + 1, _steps.y + 1, _steps.z + 1];
 
-			for(int y = 0; y <= _steps.y; y++)
+            // Y is up, so it is incremented last
+            for(int y = 0; y <= _steps.y; y++) 
 			{
 				for(int z = 0; z <= _steps.z; z++)
 				{
@@ -74,19 +82,20 @@ namespace MarchingCube
                         _listOfCubesPerPoints.Add($"{x},{y},{z}", new int[8] { -1, -1, -1, -1, -1, -1, -1, -1 });
 
 						Vector3 pointPosition = new Vector3(
-							-BoundingBox.x/2 + x * Resolution, 
-							-BoundingBox.y/2 + y * Resolution,
-							-BoundingBox.z/2 + z * Resolution
+								-BoundingBox.x/2 + x * Resolution, 
+								-BoundingBox.y/2 + y * Resolution,
+								-BoundingBox.z/2 + z * Resolution
 							);                        
 
 						float noiseSample = -pointPosition.y;
 
 						Point point = new Point(noiseSample, pointPosition);
 						_pointList[x,y,z] = point;
+
 						if(AddSpheres)
 						{
 							GameObject PointView = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-							PointView.name = pointPosition.ToString();
+							PointView.name = $"{x},{y},{z}";
 							PointView.transform.position = pointPosition;
 							PointView.transform.localScale = new Vector3(SphereSize, SphereSize, SphereSize);
 							PointView.GetComponent<Renderer>().material.SetColor("_Color", new Color(noiseSample, noiseSample, noiseSample));
@@ -99,11 +108,11 @@ namespace MarchingCube
             
             CreateCubes();
 
-
             foreach(Cube cube in _cubeList)
 			{
 				CalculateCube(cube);
 			}
+
 			DrawCubes();
 		}
 
@@ -141,9 +150,7 @@ namespace MarchingCube
 			_triangleList.Clear();
 		}
 
-		// Inefficient mesh generation.
-		// The vertices and triangles are added indiscriminately instead of ignoring the points already 
-		// in the vertice list, resulting in meshes with 1700 vertices instead of 300
+
 		/// <summary>
 		/// Calculates and looks up the appropriate arragment of vertices and triangles based on the cubes 
 		/// points values and appends to a list of vertices and triangles for later use to build the mesh
@@ -201,8 +208,11 @@ namespace MarchingCube
 				_vertPointList[11] = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(3)), GetPointFromIndex(cube.GetValueAtRow(7)));
 			
 			int ntriang = 0;
-			
-			for(int i = 0; marchingCubesLookupTable.triTable[cubeIndex, i] != -1; i += 3)
+
+            // Inefficient mesh generation.
+            // The vertices and triangles are added indiscriminately instead of ignoring the points already 
+            // in the vertice list, resulting in meshes with 1700 vertices instead of 300
+            for(int i = 0; marchingCubesLookupTable.triTable[cubeIndex, i] != -1; i += 3)
 			{
 				_verticesList.Add(_vertPointList[marchingCubesLookupTable.triTable[cubeIndex, i    ]].Position);
 				_verticesList.Add(_vertPointList[marchingCubesLookupTable.triTable[cubeIndex, i + 1]].Position);
