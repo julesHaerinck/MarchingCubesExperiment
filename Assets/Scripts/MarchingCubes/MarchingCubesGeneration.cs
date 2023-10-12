@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 
 // Marching cubes Algorithm take from the website 
@@ -118,7 +119,7 @@ namespace MarchingCube
 		}
 
 		// Update is called once per frame
-		void FixedUpdate()
+		void Update()
 		{
 			if(Input.GetMouseButton(0) || Input.GetMouseButton(1))
 			{
@@ -126,13 +127,16 @@ namespace MarchingCube
                 {
                     foreach(int cubeIndex in _cubeIndexList)
                     {
+						//Debug.Log(cubeIndex);
                         CalculateCube(_cubeList[cubeIndex]);
-                        //DebugDrawCube(_cubeList[cubeIndex]);
+                        DebugDrawCube(_cubeList[cubeIndex]);
                     }
                     _cubeIndexList.Clear();
                     DrawCubes();
+                    //EditorApplication.isPaused = true;
+
                 }
-				_shouldUpdate = false;
+                _shouldUpdate = false;
 			}
 		}
 
@@ -375,7 +379,8 @@ namespace MarchingCube
 		/// <param name="strenght"></param>
 		public void UpdateIsoValuesFromCamera(Vector3 hit, float sphereRadius = 1f, float strenght = 0.1f)
 		{
-			_shouldUpdate = true;
+			_cubeIndexList.Clear();
+            _shouldUpdate = true;
 			for(int y = 0; y <= _steps.y; y++)
 			{
 				for(int z = 0; z <= _steps.z; z++)
@@ -383,26 +388,21 @@ namespace MarchingCube
 					for(int x = 0; x <= _steps.x; x++)
 					{
                         Vector3 pointPosition = _pointList[x, y, z].Position;
-                        //if(!CheckIfPointIsInSphere(hit, pointPosition, sphereRadius))
-						//	continue;
-
-                        float isoValue = _pointList[x, y, z].IsosurfaceValue + strenght;
-
-                        string pointName = $"{x},{y},{z}";
-
-						_listOfCubesPerPoints[pointName].ToList().ForEach(p => { if(p == -1) return; _cubeIndexList.Add(p); });
 
                         if(!CheckIfPointIsInSphere(hit, pointPosition, sphereRadius))
                             continue;
 
+                        string pointName = $"{x},{y},{z}";
+						_listOfCubesPerPoints[pointName].ToList().ForEach(p => { if(p == -1) return; _cubeIndexList.Add(p); Debug.Log(p); });
+
+
+                        float isoValue = _pointList[x, y, z].IsosurfaceValue + strenght;
                         if(isoValue > 1)
 							isoValue = 1;
 						else if(isoValue <= 0)
 							isoValue = 0;
 			
-						//if(CheckIfPointIsInSphere(hit, pointPosition, sphereRadius))
 						_pointList[x, y, z].IsosurfaceValue = isoValue;
-						
 			
 						if(AddSpheres)
 						{
@@ -411,7 +411,10 @@ namespace MarchingCube
 					}
 				}
 			}
-			_listOfCubesPerPoints.Distinct();
+			// removes any duplicate cube index
+			Debug.Log("a :" +_cubeIndexList.Count);
+            _cubeIndexList.Distinct();
+			Debug.Log("b :" + _cubeIndexList.Count);
 		}
 		
 		/// <summary>
