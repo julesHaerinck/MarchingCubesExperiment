@@ -133,10 +133,12 @@ namespace MarchingCube
 			{
 				if(_shouldUpdate)
                 {
-                    foreach(int cubeIndex in _cubeIndexList)
+                    
+					//foreach(int cubeIndex in _cubeIndexList)
+					foreach(Cube cubeIndex in _cubeList)
                     {
 						//Debug.Log(cubeIndex);
-                        CalculateCube(_cubeList[cubeIndex], cubeIndex);
+                        CalculateCube(cubeIndex);
                         //DebugDrawCube(_cubeList[cubeIndex]);
                     }
                     _cubeIndexList.Clear();
@@ -153,7 +155,7 @@ namespace MarchingCube
 		/// </summary>
 		private void GenerateMesh()
 		{
-			_newMesh = new Mesh();
+			//_newMesh = new Mesh();
 			MainMeshFilter.mesh.Clear();
 
 			_newMesh.vertices = _verticesList.ToArray();
