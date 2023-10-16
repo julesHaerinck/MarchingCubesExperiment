@@ -6,7 +6,6 @@ namespace MarchingCube
 {
     public class Cube
     {
-
         private int[,] _pointList = new int[8,3];
         /// <summary>
         /// Store the points of the cube.

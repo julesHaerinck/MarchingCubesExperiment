@@ -217,7 +217,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 90f04ace199912641b104280a440c12c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  BoundingBox: {x: 5, y: 5, z: 5}
+  BoundingBox: {x: 10, y: 10, z: 10}
   MainMeshFilter: {fileID: 491653748}
   MainMeshCollider: {fileID: 491653750}
   SphereSize: 0.2

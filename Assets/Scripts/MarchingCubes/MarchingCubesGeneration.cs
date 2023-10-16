@@ -44,14 +44,15 @@ namespace MarchingCube
 		private List<Cube>    _cubeList      = new List<Cube>();    // all the cubes in the defined space
 		private List<int>     _cubeIndexList = new List<int>();     // only the cubes that need to be used to create the mesh
 		private List<int>     _triangleList  = new List<int>();     // list of index corresponding to the vertice used by triangle
+		private List<Point>   _cubeToCompute = new List<Point>();   // stores the cubes that will need to be used to generate the mesh
 		private List<Vector3> _verticesList  = new List<Vector3>(); // list of vertices used by the mesh
 		private Point[]       _vertPointList = new Point[12];       // list of vertex used during cube calculation
         private bool          _shouldUpdate  = false;
 
-        private Renderer[,,] _sphereVisualizer;  // array of renderer representing the spheres (to help visulize)
-		private Vector3Int   _steps;             // number of steps defining how many points are in each directions
-		private Point[,,]    _pointList;         // array of all the points in the space
-		private Mesh         _newMesh;           // terrain mesh
+        private Renderer[,,]  _sphereVisualizer; // array of renderer representing the spheres (to help visulize)
+		private Vector3Int    _steps;            // number of steps defining how many points are in each directions
+		private Point[,,]     _pointList;        // array of all the points in the space
+		private Mesh          _newMesh;          // terrain mesh
 		
 		// Uses the point coordinates as the key and stores an array of 8 int
 		// corresponding the the index of all the cubes associated to them (a point can only have up to 8 cubes)
@@ -96,7 +97,7 @@ namespace MarchingCube
 
 						if(AddSpheres)
 						{
-							GameObject PointView = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+							GameObject PointView = GameObject.CreatePrimitive(PrimitiveType.Cube);
 							PointView.name = $"{x},{y},{z}";
 							PointView.transform.position = pointPosition;
 							PointView.transform.localScale = new Vector3(SphereSize, SphereSize, SphereSize);
@@ -109,14 +110,21 @@ namespace MarchingCube
 			}
             
             CreateCubes();
-
+			int cubeIndex = 0;
             foreach(Cube cube in _cubeList)
 			{
-				CalculateCube(cube);
+				CalculateCube(cube, cubeIndex);
+				cubeIndex++;
 			}
 
-			DrawCubes();
-		}
+			GenerateMesh();
+
+            //Debug.Log(_cubeToCompute.Count);
+
+            var d = _cubeToCompute.Distinct();
+            //Debug.Log(d.ToList().Count);
+
+        }
 
 		// Update is called once per frame
 		void Update()
@@ -128,11 +136,11 @@ namespace MarchingCube
                     foreach(int cubeIndex in _cubeIndexList)
                     {
 						//Debug.Log(cubeIndex);
-                        CalculateCube(_cubeList[cubeIndex]);
-                        DebugDrawCube(_cubeList[cubeIndex]);
+                        CalculateCube(_cubeList[cubeIndex], cubeIndex);
+                        //DebugDrawCube(_cubeList[cubeIndex]);
                     }
                     _cubeIndexList.Clear();
-                    DrawCubes();
+                    GenerateMesh();
                     //EditorApplication.isPaused = true;
 
                 }
@@ -143,7 +151,7 @@ namespace MarchingCube
 		/// <summary>
 		/// Creates the mesh based on the cubes calculations
 		/// </summary>
-		private void DrawCubes()
+		private void GenerateMesh()
 		{
 			_newMesh = new Mesh();
 			MainMeshFilter.mesh.Clear();
@@ -164,7 +172,7 @@ namespace MarchingCube
 		/// points values and appends to a list of vertices and triangles for later use to build the mesh
 		/// </summary>
 		/// <param name="cube">The cube to calculate</param>
-		private void CalculateCube(Cube cube, int passes = -1)
+		private void CalculateCube(Cube cube, int cubeListIndex = -1)
 		{
 			
 			uint cubeIndex = 0;
@@ -214,23 +222,22 @@ namespace MarchingCube
 				_vertPointList[10] = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(2)), GetPointFromIndex(cube.GetValueAtRow(6)));
 			if((marchingCubesLookupTable.edgeTable[cubeIndex] & 2048) != 0)
 				_vertPointList[11] = InterpolateTwoPoints(GetPointFromIndex(cube.GetValueAtRow(3)), GetPointFromIndex(cube.GetValueAtRow(7)));
-			
-			int ntriang = 0;
 
-            // Inefficient mesh generation.
-            // The vertices and triangles are added indiscriminately instead of ignoring the points already 
-            // in the vertice list, resulting in meshes with 1700 vertices instead of 300
+			//_cubeToCompute.AddRange(_vertPointList.ToList());
+
+			// Inefficient mesh generation.
+			// The vertices and triangles are added indiscriminately instead of ignoring the points already 
+			// in the vertice list, resulting in meshes with 1700 vertices instead of 300
             for(int i = 0; marchingCubesLookupTable.triTable[cubeIndex, i] != -1; i += 3)
 			{
 				_verticesList.Add(_vertPointList[marchingCubesLookupTable.triTable[cubeIndex, i    ]].Position);
 				_verticesList.Add(_vertPointList[marchingCubesLookupTable.triTable[cubeIndex, i + 1]].Position);
 				_verticesList.Add(_vertPointList[marchingCubesLookupTable.triTable[cubeIndex, i + 2]].Position);
-				
+
 				_triangleList.Add(_verticesList.Count - 3);
 				_triangleList.Add(_verticesList.Count - 2);
 				_triangleList.Add(_verticesList.Count - 1);
-				ntriang++;
-			}
+            }
 		}
 
 		/// <summary>
@@ -393,7 +400,7 @@ namespace MarchingCube
                             continue;
 
                         string pointName = $"{x},{y},{z}";
-						_listOfCubesPerPoints[pointName].ToList().ForEach(p => { if(p == -1) return; _cubeIndexList.Add(p); Debug.Log(p); });
+						_listOfCubesPerPoints[pointName].ToList().ForEach(p => { if(p == -1) return; _cubeIndexList.Add(p);  });
 
 
                         float isoValue = _pointList[x, y, z].IsosurfaceValue + strenght;
@@ -411,10 +418,10 @@ namespace MarchingCube
 					}
 				}
 			}
-			// removes any duplicate cube index
-			Debug.Log("a :" +_cubeIndexList.Count);
-            _cubeIndexList.Distinct();
-			Debug.Log("b :" + _cubeIndexList.Count);
+            // removes any duplicate cube index
+            //Debug.Log("a :" +_cubeIndexList.Count);
+            _cubeIndexList = _cubeIndexList.Distinct().ToList();
+			//Debug.Log("b :" + _cubeIndexList.Count);
 		}
 		
 		/// <summary>
