@@ -223,7 +223,7 @@ MonoBehaviour:
   SphereSize: 0.2
   NoiseMultiplier: 1
   AddSpheres: 0
-  Resolution: 1
+  Resolution: 0.5
   SphereParent: {fileID: 499093517}
   IsoSurfaceLimit: 0.5
   ValueSlider: 1

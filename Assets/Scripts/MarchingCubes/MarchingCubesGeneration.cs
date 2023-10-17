@@ -155,7 +155,7 @@ namespace MarchingCube
 		/// </summary>
 		private void GenerateMesh()
 		{
-			//_newMesh = new Mesh();
+			_newMesh = new Mesh();
 			MainMeshFilter.mesh.Clear();
 
 			_newMesh.vertices = _verticesList.ToArray();
