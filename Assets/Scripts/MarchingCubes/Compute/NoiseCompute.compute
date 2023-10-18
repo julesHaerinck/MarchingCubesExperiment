@@ -1,14 +1,37 @@
-// Each #kernel tells which function to compile; you can have many kernels
-#pragma kernel CSMain
+#pragma kernel GenerateNoise
 
-// Create a RenderTexture with enableRandomWrite flag and set it
-// with cs.SetTexture
-RWTexture2D<float4> Result;
+#include "Includes/FastNoiseLite.compute"
 
-[numthreads(8,8,1)]
-void CSMain (uint3 id : SV_DispatchThreadID)
+static const uint numThreads = 8;
+
+RWStructuredBuffer<float> _Weights;
+
+int _ChunkSize;
+
+// Noise Controles
+float _Amplitude;
+float _Frequency;
+float _GroundPercent;
+int   _Octaves;
+
+int indexFromCoord(int x, int y, int z)
 {
-    // TODO: insert actual code here!
+	return x + numThreads * (y + numThreads * z);
+}
 
-    Result[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
+[numthreads(numThreads,numThreads,numThreads)]
+void GenerateNoise (uint3 id : SV_DispatchThreadID)
+{
+	fnl_state noise = fnlCreateState();
+
+	noise.noise_type = FNL_NOISE_OPENSIMPLEX2;
+	noise.fractal_type = FNL_FRACTAL_RIDGED;
+	noise.frequency = _Frequency;
+	noise.octaves = _Octaves;
+
+	float3 pos = id;
+	float  ground = -pos.y + (_GroundPercent * _ChunkSize);
+	float  n = ground + fnlGetNoise3D(noise, pos.x, pos.y, pos.z) * _Amplitude;
+
+	_Weights[indexFromCoord(id.x, id.y, id.z)] = n;
 }
