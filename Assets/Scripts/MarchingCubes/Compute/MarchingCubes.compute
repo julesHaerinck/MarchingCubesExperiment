@@ -1,15 +1,25 @@
-// Each #kernel tells which function to compile; you can have many kernels
-#pragma kernel CSMain
-#include "/Includes/MarchingCubesLookupTables.compute"
+#pragma kernel March
 
-// Create a RenderTexture with enableRandomWrite flag and set it
-// with cs.SetTexture
-RWTexture2D<float4> Result;
+#include "Includes/MarchingCubesLookupTables.compute"
+#include "Includes/HelperCompute.compute"
 
-[numthreads(8,8,1)]
-void CSMain (uint3 id : SV_DispatchThreadID)
+RWStructuredBuffer<float>    _Weights;
+RWStructuredBuffer<Triangle> _Triangles;
+
+float _IsoLevel;
+
+struct Triangle{
+	float3 a,b,c;
+}
+
+[numthreads(numThreads,numThreads,numThreads)]
+void March (uint3 id : SV_DispatchThreadID)
 {
-    // TODO: insert actual code here!
+	if(id.x >= _ChunkSize - 1 || id.y >= _ChunkSize - 1 || id.z >= _ChunkSize - 1)
+	{
+		return;
+	}
+	
 
-    Result[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
+
 }
