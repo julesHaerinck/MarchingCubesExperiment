@@ -1,9 +1,9 @@
 #pragma kernel GenerateNoise
 
 #include "Includes/FastNoiseLite.compute"
-#include "Includes/HelperCompute.compute"
 
 RWStructuredBuffer<float> _Weights;
+static const int numThreads = 8;
 
 // Noise Controles
 float _Amplitude;
@@ -11,6 +11,13 @@ float _Frequency;
 float _GroundPercent;
 int   _Octaves;
 
+uint _ChunkSize;
+
+
+int indexFromCoord(int x, int y, int z)
+{
+	return x + _ChunkSize * (y + _ChunkSize * z);
+}
 
 [numthreads(numThreads,numThreads,numThreads)]
 void GenerateNoise (uint3 id : SV_DispatchThreadID)

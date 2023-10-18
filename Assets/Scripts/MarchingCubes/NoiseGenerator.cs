@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[ExecuteInEditMode]
 public class NoiseGenerator : MonoBehaviour
 {
 	[SerializeField] float _amplitude  = 5f;
