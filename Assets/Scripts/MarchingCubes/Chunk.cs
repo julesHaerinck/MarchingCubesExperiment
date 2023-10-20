@@ -75,7 +75,7 @@ public class Chunk : MonoBehaviour
 
 		Triangles[] triangles = new Triangles[ReadTriangleCount()];
 		_trianglesBuffer.GetData( triangles );
-
+		Debug.Log(triangles.Length);
 		return CreateMeshFromTriangles( triangles );
 	}
 
@@ -83,6 +83,7 @@ public class Chunk : MonoBehaviour
 	{
 		Vector3[] vertices  = new Vector3[tri.Length * 3];
 		int[]     triangles = new int[ tri.Length * 3];
+		//Debug.Log(vertices.Length);
 
 		for(int i = 0; i < tri.Length; i++)
 		{
@@ -98,11 +99,11 @@ public class Chunk : MonoBehaviour
 		}
 
 		Mesh mesh = new Mesh();
+		mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
 		mesh.vertices = vertices;
 		mesh.triangles = triangles;
 		mesh.RecalculateNormals();
 		return mesh;
-
 	}
 
 	private int ReadTriangleCount()
