@@ -11,7 +11,7 @@ struct Triangle{
 AppendStructuredBuffer<Triangle> _Triangles;
 RWStructuredBuffer<float> _Weights;
 
-uint   _ChunkSize;
+uint  _ChunkSize;
 float _IsoLevel;
 
 float3 interp(float3 edgeVertex1, float valueAtVertex1, float3 edgeVertex2, float valueAtVertex2)
