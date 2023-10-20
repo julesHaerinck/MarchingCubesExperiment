@@ -11,7 +11,11 @@ float _Frequency;
 float _GroundPercent;
 int   _Octaves;
 
-uint _ChunkSize;
+
+uint  _ChunkSize;
+float _GroundPosition;
+float _WallsWeight;
+bool  _Walls;
 
 
 int indexFromCoord(int x, int y, int z)
@@ -32,6 +36,16 @@ void GenerateNoise (uint3 id : SV_DispatchThreadID)
 	float3 pos = id;
 	float  ground = -pos.y + (_GroundPercent * _ChunkSize);
 	float  n = ground + fnlGetNoise3D(noise, pos.x, pos.y, pos.z) * _Amplitude;
+
+	if(id.y < _GroundPosition)
+	{
+		n += _WallsWeight;
+	}
+
+	if(_Walls)
+	{
+		
+	}
 
 	_Weights[indexFromCoord(id.x, id.y, id.z)] = n;
 }
