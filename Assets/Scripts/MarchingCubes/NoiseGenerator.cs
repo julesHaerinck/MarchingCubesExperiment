@@ -5,9 +5,12 @@ using UnityEngine;
 [ExecuteInEditMode]
 public class NoiseGenerator : MonoBehaviour
 {
-	[SerializeField] float _amplitude  = 5f;
-	[SerializeField] float _frequency  = 0.005f;
-	[SerializeField] int   _octaves    = 8;
+	[SerializeField] 
+	float _amplitude  = 5f;
+	[SerializeField, Range(0f, 1f)] 
+	float _frequency  = 0.005f;
+	[SerializeField, Range(1, 15)] 
+	int   _octaves    = 8;
 	[SerializeField, Range(0f,1f)] 
 	float _groundPercentage = 0.2f;
 
