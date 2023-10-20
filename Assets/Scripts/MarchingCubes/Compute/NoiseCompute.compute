@@ -11,6 +11,8 @@ float _Lacunarity;
 float _Gain;
 float _WeightedStrength;
 int   _Octaves;
+int   _NoiseType;
+int   _FractalType;
 
 
 float _GroundPosition;
@@ -31,9 +33,8 @@ void GenerateNoise (uint3 id : SV_DispatchThreadID)
 {
 	fnl_state noise = fnlCreateState();
 
-	//noise.noise_type = FNL_NOISE_CELLULAR;
-	noise.noise_type = FNL_NOISE_OPENSIMPLEX2;
-	noise.fractal_type = FNL_FRACTAL_FBM;
+	noise.noise_type = _NoiseType;
+	noise.fractal_type = _FractalType;
 	noise.frequency = _Frequency;
 	noise.octaves = _Octaves;
 	noise.lacunarity = _Lacunarity;

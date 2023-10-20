@@ -6,6 +6,8 @@ using UnityEngine;
 public class NoiseGenerator : MonoBehaviour
 {
 	[Header ("Noise 1")]
+	[SerializeField] private NOISE_TYPE _noiseType;
+	[SerializeField] private FRACTAL_TYPE _fractalType;
 	[SerializeField] private float _amplitude  = 5f;
 	[SerializeField, Range(0f, 1f)] private float _frequency        = 0.005f;
 	[SerializeField]			    private float _lacunarity       = 0f;
@@ -23,6 +25,26 @@ public class NoiseGenerator : MonoBehaviour
 	private float _hardWallsWeight = 10f;
 	[SerializeField]
 	private bool  _walls = true;
+
+	enum NOISE_TYPE
+	{
+		OPENSIMPLEX2,
+		OPENSIMPLEX2S,
+		CELLULAR,
+		PERLIN,
+		VALUE_CUBIC,
+		VALUE
+    }
+
+	enum FRACTAL_TYPE
+	{
+		NONE,
+		FBM,
+		RIDGED,
+		PINGPONG,
+		DOMAIN_WARP_PROGRESSIVE,
+		DOMAIN_WARP_INDEPENDENT
+    }
 
 
     public ComputeShader NoiseCompute;
@@ -58,6 +80,8 @@ public class NoiseGenerator : MonoBehaviour
 		NoiseCompute.SetInt  ("_ChunkSize"    , GridMetrics.PointsPerChunk);
 
         NoiseCompute.SetInt  ("_Octaves"         , _octaves);
+        NoiseCompute.SetInt  ("_NoiseType"       , (int)_noiseType);
+        NoiseCompute.SetInt  ("_FractalType"     , (int)_fractalType);
         NoiseCompute.SetFloat("_Amplitude"       , _amplitude);
 		NoiseCompute.SetFloat("_Frequency"       , _frequency);
 		NoiseCompute.SetFloat("_Lacunarity"      , _lacunarity);
