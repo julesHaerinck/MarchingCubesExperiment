@@ -75,7 +75,7 @@ public class Chunk : MonoBehaviour
 
 		Triangles[] triangles = new Triangles[ReadTriangleCount()];
 		_trianglesBuffer.GetData( triangles );
-		Debug.Log(triangles.Length);
+		//Debug.Log(triangles.Length);
 		return CreateMeshFromTriangles( triangles );
 	}
 

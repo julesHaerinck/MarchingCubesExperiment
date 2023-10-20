@@ -6,16 +6,19 @@ RWStructuredBuffer<float> _Weights;
 static const int numThreads = 8;
 
 // Noise Controles
-float _Amplitude;
 float _Frequency;
-float _GroundPercent;
+float _Lacunarity;
+float _Gain;
+float _WeightedStrength;
 int   _Octaves;
 
 
-uint  _ChunkSize;
 float _GroundPosition;
 float _WallsWeight;
+float _GroundPercent;
+float _Amplitude;
 bool  _Walls;
+uint  _ChunkSize;
 
 
 int indexFromCoord(int x, int y, int z)
@@ -28,16 +31,21 @@ void GenerateNoise (uint3 id : SV_DispatchThreadID)
 {
 	fnl_state noise = fnlCreateState();
 
+	//noise.noise_type = FNL_NOISE_CELLULAR;
 	noise.noise_type = FNL_NOISE_OPENSIMPLEX2;
-	noise.fractal_type = FNL_FRACTAL_RIDGED;
+	noise.fractal_type = FNL_FRACTAL_FBM;
 	noise.frequency = _Frequency;
 	noise.octaves = _Octaves;
+	noise.lacunarity = _Lacunarity;
+	noise.gain = _Gain;
+	noise.weighted_strength = _WeightedStrength;
+
 
 	float3 pos = id;
 	float  ground = -pos.y + (_GroundPercent * _ChunkSize);
 	float  n = ground + fnlGetNoise3D(noise, pos.x, pos.y, pos.z) * _Amplitude;
 
-	if(id.y < _GroundPosition)
+	if(pos.y < _GroundPosition)
 	{
 		n += _WallsWeight;
 	}

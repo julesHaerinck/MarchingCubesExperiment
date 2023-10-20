@@ -5,12 +5,16 @@ using UnityEngine;
 [ExecuteInEditMode]
 public class NoiseGenerator : MonoBehaviour
 {
-	[SerializeField]
-	private float _amplitude  = 5f;
-	[SerializeField, Range(0f, 1f)]
-	private float _frequency  = 0.005f;
-	[SerializeField, Range(1, 15)]
-	private int   _octaves    = 8;
+	[Header ("Noise 1")]
+	[SerializeField] private float _amplitude  = 5f;
+	[SerializeField, Range(0f, 1f)] private float _frequency        = 0.005f;
+	[SerializeField]			    private float _lacunarity       = 0f;
+	[SerializeField]			    private float _gain             = 0f;
+	[SerializeField]			    private float _weightedStrength = 0f;
+	[SerializeField, Range(1 , 15)] private int   _octaves          = 8;
+
+
+	[Header ("Misc Controles")]
 	[SerializeField, Range(0f,1f)]
 	private float _groundPercentage = 0.2f;
 	[SerializeField]
@@ -52,15 +56,18 @@ public class NoiseGenerator : MonoBehaviour
 
 		NoiseCompute.SetBuffer(0, "_Weights"  , _weightsBuffer);
 		NoiseCompute.SetInt  ("_ChunkSize"    , GridMetrics.PointsPerChunk);
-        NoiseCompute.SetInt  ("_Octaves"       , _octaves);
-        NoiseCompute.SetFloat("_Amplitude"     , _amplitude);
-		NoiseCompute.SetFloat("_Frequency"     , _frequency);
+
+        NoiseCompute.SetInt  ("_Octaves"         , _octaves);
+        NoiseCompute.SetFloat("_Amplitude"       , _amplitude);
+		NoiseCompute.SetFloat("_Frequency"       , _frequency);
+		NoiseCompute.SetFloat("_Lacunarity"      , _lacunarity);
+		NoiseCompute.SetFloat("_Gain"            , _gain);
+		NoiseCompute.SetFloat("_WeightedStrength", _weightedStrength);
+
 		NoiseCompute.SetFloat("_GroundPercent" , _groundPercentage);
 		NoiseCompute.SetFloat("_GroundPosition", _hardGroundPosition);
 		NoiseCompute.SetFloat("_WallsWeight"   , _hardWallsWeight);
 		NoiseCompute.SetBool ("_Walls"         , _walls);
-		
-
 
 
         NoiseCompute.Dispatch(
